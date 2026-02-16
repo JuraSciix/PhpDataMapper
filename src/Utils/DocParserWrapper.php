@@ -1,0 +1,29 @@
+<?php
+
+namespace JuraSciix\DataMapper\Utils;
+
+use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode;
+use PHPStan\PhpDocParser\Lexer\Lexer;
+use PHPStan\PhpDocParser\Parser\ConstExprParser;
+use PHPStan\PhpDocParser\Parser\PhpDocParser;
+use PHPStan\PhpDocParser\Parser\TokenIterator;
+use PHPStan\PhpDocParser\Parser\TypeParser;
+
+final class DocParserWrapper {
+    private readonly Lexer $lexer;
+    private readonly PhpDocParser $phpDocParser;
+
+    function __construct() {
+        $constExprParser = new ConstExprParser();
+        $this->lexer = new Lexer();
+        $this->phpDocParser = new PhpDocParser(new TypeParser($constExprParser), $constExprParser);
+    }
+
+    /**
+     * @return PhpDocNode
+     */
+    function parse(string $document) {
+        $tokens = $this->lexer->tokenize($document);
+        return $this->phpDocParser->parse(new TokenIterator($tokens));
+    }
+}
