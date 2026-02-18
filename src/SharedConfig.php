@@ -17,13 +17,6 @@ use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 class SharedConfig {
 
     /**
-     * @var ContravariantMap<FactoryInterface<?>>
-     *
-     * @deprecated
-     */
-    public readonly ContravariantMap $factories;
-
-    /**
      * @var ContravariantMap<AdapterInterface<?>>
      */
     public readonly ContravariantMap $adapters;
@@ -46,7 +39,6 @@ class SharedConfig {
     public ?DateTimeZone $timeZone = null;
 
     function __construct() {
-        $this->factories = new ContravariantMap();
         $this->adapters = new ContravariantMap();
     }
 

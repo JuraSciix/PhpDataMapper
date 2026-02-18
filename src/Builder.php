@@ -16,20 +16,6 @@ final class Builder {
     ) {}
 
     /**
-     * Регистрирует собственную фабрику для данного типа.
-     *
-     * @param FactoryInterface<?> $factory Фабрика.
-     * @return self
-     *
-     * @deprecated Лишний функционал. Такой же логики можно добиться с помощью собственных адаптеров.
-     * Метод подлежит удалению в следующей версии.
-     */
-    function registerFactory(string $type, FactoryInterface $factory) {
-        $this->config->factories->put($type, $factory);
-        return $this;
-    }
-
-    /**
      * Регистрирует собственный адаптер для данного типа.
      *
      * @param AdapterInterface<?> $adapter Адаптер.
