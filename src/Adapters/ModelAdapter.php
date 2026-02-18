@@ -4,11 +4,11 @@ namespace JuraSciix\DataMapper\Adapters;
 
 use Exception;
 use JuraSciix\DataMapper\AdapterInterface;
+use JuraSciix\DataMapper\Adapters\Model\FactoryInterface;
 use JuraSciix\DataMapper\Adapters\Model\Property;
 use JuraSciix\DataMapper\DataMapper;
 use JuraSciix\DataMapper\Exception\DeserializeException;
 use JuraSciix\DataMapper\Exception\SerializeException;
-use JuraSciix\DataMapper\FactoryInterface;
 use JuraSciix\DataMapper\Utils\StringHelper;
 use JuraSciix\DataMapper\Utils\TypeHelper;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
@@ -129,7 +129,7 @@ final class ModelAdapter implements AdapterInterface {
         }
 
         try {
-            $instance = $this->factory->create(...$promoted);
+            $instance = $this->factory->create($promoted);
         } catch (Exception $e) {
             throw new DeserializeException("Unable to create $this->typeNode", previous: $e);
         }

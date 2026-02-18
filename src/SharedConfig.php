@@ -8,7 +8,6 @@ use DateTimeZone;
 use JuraSciix\DataMapper\Adapters\DateTimeAdapter;
 use JuraSciix\DataMapper\Adapters\DeserializeAdapterWrapper;
 use JuraSciix\DataMapper\Adapters\DeserializeMatchingAdapterWrapper;
-use JuraSciix\DataMapper\Adapters\StdClassAdapter;
 use JuraSciix\DataMapper\Utils\ContravariantMap;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 
@@ -16,11 +15,6 @@ use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
  * @internal
  */
 class SharedConfig {
-
-    /**
-     * @var ContravariantMap<FactoryInterface<?>>
-     */
-    public readonly ContravariantMap $factories;
 
     /**
      * @var ContravariantMap<AdapterInterface<?>>
@@ -45,7 +39,6 @@ class SharedConfig {
     public ?DateTimeZone $timeZone = null;
 
     function __construct() {
-        $this->factories = new ContravariantMap();
         $this->adapters = new ContravariantMap();
     }
 

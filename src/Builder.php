@@ -16,17 +16,6 @@ final class Builder {
     ) {}
 
     /**
-     * Регистрирует собственную фабрику для данного типа.
-     *
-     * @param FactoryInterface<?> $factory Фабрика.
-     * @return self
-     */
-    function registerFactory(string $type, FactoryInterface $factory) {
-        $this->config->factories->put($type, $factory);
-        return $this;
-    }
-
-    /**
      * Регистрирует собственный адаптер для данного типа.
      *
      * @param AdapterInterface<?> $adapter Адаптер.

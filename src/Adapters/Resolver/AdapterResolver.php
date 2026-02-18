@@ -138,12 +138,7 @@ class AdapterResolver {
             );
         }
 
-        $className = $class->getName();
-        if ($this->config->factories->contains($className)) {
-            $factory = $this->config->factories->get($className);
-        } else {
-            $factory = new ReflectionClassNewInstance($class);
-        }
+        $factory = new ReflectionClassNewInstance($class);
 
         return new ModelAdapter($typeNode, $modelProperties, $factory,
             !$this->config->omitUnmatchedKeys,
