@@ -9,6 +9,7 @@ use JuraSciix\DataMapper\AdapterInterface;
 use JuraSciix\DataMapper\DataMapper;
 use JuraSciix\DataMapper\Exception\DeserializeException;
 use JuraSciix\DataMapper\Exception\SerializeException;
+use JuraSciix\DataMapper\Utils\StringHelper;
 
 /**
  * @template-implements AdapterInterface<DateTimeImmutable>
@@ -21,9 +22,12 @@ class DateTimeAdapter implements AdapterInterface {
     ) {}
 
     function deserialize(DataMapper $mapper, mixed $data): DateTime {
+        if (!is_string($data)) {
+            throw new DeserializeException(StringHelper::interpolate("Expected string, received ??", $data));
+        }
         $dateTime = DateTime::createFromFormat($this->format, $data, $this->timeZone);
         if ($dateTime === false) {
-            throw new DeserializeException("Invalid value of format '$this->format'");
+            throw new DeserializeException(StringHelper::interpolate());
         }
         return $dateTime;
     }
