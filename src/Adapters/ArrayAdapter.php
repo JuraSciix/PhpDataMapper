@@ -6,6 +6,8 @@ use JuraSciix\DataMapper\AdapterInterface;
 use JuraSciix\DataMapper\DataMapper;
 use JuraSciix\DataMapper\Exception\DeserializeException;
 use JuraSciix\DataMapper\Exception\SerializeException;
+use JuraSciix\DataMapper\Utils\StringHelper;
+use JuraSciix\DataMapper\Utils\TypeHelper;
 
 /**
  * @template TComponent
@@ -21,8 +23,8 @@ final class ArrayAdapter implements AdapterInterface {
     ) {}
 
     private function validate($data): void {
-        if (!is_array($data) || !array_is_list($data)) {
-            throw new DeserializeException("Expected array (list)");
+        if (!TypeHelper::isList($data)) {
+            throw new DeserializeException(StringHelper::interpolate("Expected array (list), but received ??", $data));
         }
     }
 
