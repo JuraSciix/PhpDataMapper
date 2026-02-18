@@ -2,6 +2,10 @@
 
 namespace JuraSciix\DataMapper;
 
+use DateTime;
+use DateTimeInterface;
+use DateTimeZone;
+use JuraSciix\DataMapper\Adapters\DateTimeAdapter;
 use JuraSciix\DataMapper\Adapters\DeserializeAdapterWrapper;
 use JuraSciix\DataMapper\Adapters\DeserializeMatchingAdapterWrapper;
 use JuraSciix\DataMapper\Adapters\StdClassAdapter;
@@ -36,6 +40,10 @@ class SharedConfig {
 
     public bool $allowTypeConverting = false;
 
+    public string $dateTimeFormat = DateTimeInterface::ATOM;
+
+    public ?DateTimeZone $timeZone = null;
+
     function __construct() {
         $this->factories = new ContravariantMap();
         $this->adapters = new ContravariantMap();
@@ -58,7 +66,7 @@ class SharedConfig {
         $this->builtinAdapters[$type] = $adapter;
     }
 
-    function registerStdAdapters(): void {
-
+    function registerSplAdapters(): void {
+        $this->adapters->put(DateTime::class, new DateTimeAdapter($this->dateTimeFormat, $this->timeZone));
     }
 }
