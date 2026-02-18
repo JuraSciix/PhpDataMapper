@@ -19,6 +19,8 @@ class SharedConfig {
 
     /**
      * @var ContravariantMap<FactoryInterface<?>>
+     *
+     * @deprecated
      */
     public readonly ContravariantMap $factories;
 
