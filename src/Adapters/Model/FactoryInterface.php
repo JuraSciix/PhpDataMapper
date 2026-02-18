@@ -1,6 +1,6 @@
 <?php
 
-namespace JuraSciix\DataMapper;
+namespace JuraSciix\DataMapper\Adapters\Model;
 
 /**
  * @template-covariant TValue
@@ -10,8 +10,8 @@ namespace JuraSciix\DataMapper;
 interface FactoryInterface {
 
     /**
-     * @param mixed ...$args Аргументы. Обычно для promoted-свойств.
+     * @param array $args Аргументы. Обычно для promoted-свойств.
      * @return TValue Новый объект
      */
-    function create(mixed ...$args): mixed;
+    function create(array $args): mixed;
 }

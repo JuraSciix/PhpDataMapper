@@ -2,7 +2,7 @@
 
 namespace JuraSciix\DataMapper\Adapters\Resolver;
 
-use JuraSciix\DataMapper\FactoryInterface;
+use JuraSciix\DataMapper\Adapters\Model\FactoryInterface;
 use ReflectionClass;
 use ReflectionException;
 
@@ -17,7 +17,7 @@ class ReflectionClassNewInstance implements FactoryInterface {
      *
      * @throws ReflectionException
      */
-    function create(...$args): object {
+    function create(array $args): object {
         return $this->class->newInstanceArgs($args);
     }
 }
