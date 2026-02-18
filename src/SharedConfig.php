@@ -8,7 +8,6 @@ use DateTimeZone;
 use JuraSciix\DataMapper\Adapters\DateTimeAdapter;
 use JuraSciix\DataMapper\Adapters\DeserializeAdapterWrapper;
 use JuraSciix\DataMapper\Adapters\DeserializeMatchingAdapterWrapper;
-use JuraSciix\DataMapper\Adapters\StdClassAdapter;
 use JuraSciix\DataMapper\Utils\ContravariantMap;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 
