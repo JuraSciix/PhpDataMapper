@@ -2,6 +2,7 @@
 
 namespace JuraSciix\DataMapper;
 
+use DateTimeZone;
 use JuraSciix\DataMapper\Exception\DataMapperException;
 
 final class Builder {
@@ -78,11 +79,35 @@ final class Builder {
     }
 
     /**
+     * Устанавливает формат даты для всех экземпляров {@link \DateTimeInterface}.
+     *
+     * __Важно__: даты работают только со строковыми значениями!
+     *
+     * @return self
+     */
+    function dateTimeFormat(string $dateTimeFormat) {
+        $this->config->dateTimeFormat = $dateTimeFormat;
+        return $this;
+    }
+
+    /**
+     * Устанавливает часовой пяс для всех экземпляров {@link \DateTimeInterface}.
+     *
+     * __Важно__: даты работают только со строковыми значениями!
+     *
+     * @return self
+     */
+    function timeZone(DateTimeZone $timeZone) {
+        $this->config->timeZone = $timeZone;
+        return $this;
+    }
+
+    /**
      * @return DataMapper
      */
     function build() {
         $this->config->registerBuiltinAdapters();
-        $this->config->registerStdAdapters();
+        $this->config->registerSplAdapters();
         return $this->mapper;
     }
 }
