@@ -9,6 +9,7 @@ use JuraSciix\DataMapper\Adapters\DateTime\DateTimeAdapter;
 use JuraSciix\DataMapper\Adapters\DateTime\DateTimeImmutableAdapter;
 use JuraSciix\DataMapper\Adapters\DeserializeAdapterWrapper;
 use JuraSciix\DataMapper\Adapters\DeserializeMatchingAdapterWrapper;
+use JuraSciix\DataMapper\Adapters\EmptyAdapter;
 use JuraSciix\DataMapper\Utils\ContravariantMap;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 
@@ -44,6 +45,8 @@ class SharedConfig {
     }
 
     function registerBuiltinAdapters(): void {
+        $this->builtinAdapters['mixed'] = EmptyAdapter::instance();
+
         $this->registerBuiltin('int', 'is_int', 'intval');
         $this->registerBuiltin('float', 'is_float', 'floatval');
         $this->registerBuiltin('bool', 'is_bool', 'boolval');

@@ -112,8 +112,8 @@ class BasicTest extends TestCase {
     }
 
     #[Test]
-    function deserializeArray(): void {
-        $perfect =  new BarList();
+    function deserializeArrayOk(): void {
+        $perfect = new BarList();
         $perfect->setBarList([
             new Bar(1),
             new Bar(2),
@@ -132,5 +132,20 @@ class BasicTest extends TestCase {
         $barList = $this->mapper->deserialize($data, BarList::class);
 
         self::assertEquals($perfect, $barList);
+    }
+
+    #[Test]
+    function deserializeMixedOk(): void {
+        $perfect = new MixedContainer();
+        $perfect->anything = ['foo' => 'bar'];
+
+        $data = [
+            'anything' => [
+                'foo' => 'bar'
+            ]
+        ];
+        $object = $this->mapper->deserialize($data, MixedContainer::class);
+
+        self::assertEquals($perfect, $object);
     }
 }
