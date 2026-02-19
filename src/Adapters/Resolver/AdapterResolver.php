@@ -44,47 +44,66 @@ class AdapterResolver {
      * @template TValue
      * @return AdapterInterface<TValue>
      */
-    function resolve(TypeNode $typeNode, bool $check = true): AdapterInterface {
-        $tn = DocTypeHelper::canonize($typeNode);
-
-        // Бездумно кешируем. Заметка: Это вредно, кстати.
-        $typeString = strval($tn);
-
-        // Оптимизация: адаптеры для встроенных типов уже кешированы, поэтому проверяем их первыми.
-        if (array_key_exists($typeString, $this->config->builtinAdapters)) {
-            return $this->config->builtinAdapters[$typeString];
+    function resolve(TypeNode $typeNode): AdapterInterface {
+        $adapter = $this->resolveWrapper(new TypeWrapper($typeNode));
+        if ($adapter instanceof Unusable) {
+            throw new ResolveException($adapter->errorMessage());
         }
+        return $adapter;
+    }
 
-        if (in_array($typeString, $this->processing, true)) {
+    /**
+     * @param TypeWrapper $wrapper
+     * @param TypeNode $node
+     * @return AdapterInterface<?>
+     */
+    private function resolveWithTrack($wrapper, $node) {
+        // Заметка: проверка на рекурсию нужна только для адаптеров над классами,
+        //  остальные типы формально не могут быть рекурсивными.
+        if (in_array($wrapper->string, $this->processing, true)) {
             $last = $this->processing[sizeof($this->processing) - 1];
             throw new ResolveException(
-                "Recursion detected: $typeString refers to $last, which refers back to it");
+                "Recursion detected: $wrapper->string refers to $last, which refers back to it");
         }
 
-        if (array_key_exists($typeString, $this->cache)) {
-            return $this->cache[$typeString];
-        }
-
-        $this->processing[] = $typeString;
+        $this->processing[] = $wrapper->string;
 
         try {
-            $adapter = $this->doResolve($tn);
-            if ($check && $adapter instanceof Unusable) {
-                throw new ResolveException($adapter->errorMessage());
-            }
-            $this->cache[$typeString] = $adapter;
-            return $adapter;
+            return $this->resolveWrapper(new TypeWrapper($node));
         } finally {
             // Последний элемент должен быть $typeString.
-            array_pop($this->processing);
+            $last = array_pop($this->processing);
+            assert($last === $wrapper->string);
         }
     }
 
     /**
-     * @param TypeNode $typeNode
+     * @param TypeWrapper $wrapper
      * @return AdapterInterface<?>
      */
-    private function doResolve($typeNode) {
+    private function resolveWrapper($wrapper) {
+        // Оптимизация: адаптеры для встроенных типов уже кешированы, поэтому проверяем их первыми.
+        if (array_key_exists($wrapper->string, $this->config->builtinAdapters)) {
+            return $this->config->builtinAdapters[$wrapper->string];
+        }
+
+        // Бездумно кешируем. Заметка: Это вредно, кстати.
+        if (array_key_exists($wrapper->string, $this->cache)) {
+            return $this->cache[$wrapper->string];
+        }
+
+        $adapter = $this->doResolve($wrapper);
+        $this->cache[$wrapper->string] = $adapter;
+        return $adapter;
+    }
+
+    /**
+     * @param TypeWrapper $wrapper
+     * @return AdapterInterface<?>
+     */
+    private function doResolve($wrapper) {
+        $typeNode = $wrapper->node;
+
         if ($typeNode instanceof IdentifierTypeNode) {
             $typeName = $typeNode->name;
             if ($this->config->adapters->contains($typeName)) {
@@ -94,7 +113,7 @@ class AdapterResolver {
                 $class = ReflectionHelper::getReflectionClassSurely($typeName);
                 if ($class->isInstantiable()) {
                     AdapterResolver::validateClass($class);
-                    return $this->resolveClass($typeNode, $class);
+                    return $this->resolveClass($wrapper, $class);
                 }
             }
         }
@@ -110,8 +129,11 @@ class AdapterResolver {
         }
 
         if ($typeNode instanceof GenericTypeNode) {
-            $adapter = $this->resolve($typeNode->type, false);
+            $adapter = $this->resolveWrapper(new TypeWrapper($typeNode->type));
 
+            // Положим, T[G1] = ...
+            // Тогда T<T> или невозможен, или идентичен T<T<mixed>>, что разрешимо.
+            // Следовательно, рекурсия невозможна.
             if (count($typeNode->genericTypes) === 1 && ($adapter instanceof SingleGenericAdapter)) {
                 $genericAdapter = $this->resolve($typeNode->genericTypes[0]);
                 return new SingleGenericLambdaAdapter($adapter, $genericAdapter);
@@ -121,7 +143,7 @@ class AdapterResolver {
         throw new ResolveException("No suitable adapter found for '$typeNode' type");
     }
 
-    protected function resolveClass(TypeNode $typeNode, ReflectionClass $class): AdapterInterface {
+    protected function resolveClass(TypeWrapper $wrapper, ReflectionClass $class): AdapterInterface {
         $modelProperties = [];
 
         foreach ($class->getProperties() as $property) {
@@ -148,7 +170,7 @@ class AdapterResolver {
                 name: $property->getName(),
                 key: $key,
                 promoted: $property->isPromoted(),
-                adapter: $this->resolve($propertyTypeNode),
+                adapter: $this->resolveWithTrack($wrapper, $propertyTypeNode),
                 required: !$property->hasDefaultValue(),
                 setter: isset($getterMethod) ? new ReflectionMethodSetter($setterMethod) : new ReflectionPropertySetter($property),
                 getter: isset($getterMethod) ? new ReflectionMethodGetter($getterMethod) : new ReflectionPropertyGetter($property)
@@ -157,7 +179,7 @@ class AdapterResolver {
 
         $factory = new ReflectionClassNewInstance($class);
 
-        return new ModelAdapter($typeNode, $modelProperties, $factory,
+        return new ModelAdapter($wrapper->node, $modelProperties, $factory,
             !$this->config->omitUnmatchedKeys,
             !$this->config->caseSensitive);
     }
