@@ -7,7 +7,6 @@ use JuraSciix\DataMapper\Adapters\ArrayAdapter;
 use JuraSciix\DataMapper\Adapters\Model\Property;
 use JuraSciix\DataMapper\Adapters\ModelAdapter;
 use JuraSciix\DataMapper\Adapters\NullAdapter;
-use JuraSciix\DataMapper\Adapters\Unusable;
 use JuraSciix\DataMapper\Adapters\SingleGenericAdapter;
 use JuraSciix\DataMapper\Adapters\SingleGenericLambdaAdapter;
 use JuraSciix\DataMapper\DataProperty;
@@ -46,8 +45,10 @@ class AdapterResolver {
      */
     function resolve(TypeNode $typeNode): AdapterInterface {
         $adapter = $this->resolveWrapper(new TypeWrapper($typeNode));
-        if ($adapter instanceof Unusable) {
-            throw new ResolveException($adapter->errorMessage());
+        if ($adapter instanceof SingleGenericAdapter) {
+            // Дополняем тип
+//            return new SingleGenericLambdaAdapter($adapter, EmptyAdapter::instance());
+            throw new ResolveException("$typeNode requires specifying a generic type");
         }
         return $adapter;
     }
@@ -129,15 +130,7 @@ class AdapterResolver {
         }
 
         if ($typeNode instanceof GenericTypeNode) {
-            $adapter = $this->resolveWrapper(new TypeWrapper($typeNode->type));
-
-            // Положим, T[G1] = ...
-            // Тогда T<T> или невозможен, или идентичен T<T<mixed>>, что разрешимо.
-            // Следовательно, рекурсия невозможна.
-            if (count($typeNode->genericTypes) === 1 && ($adapter instanceof SingleGenericAdapter)) {
-                $genericAdapter = $this->resolve($typeNode->genericTypes[0]);
-                return new SingleGenericLambdaAdapter($adapter, $genericAdapter);
-            }
+            return $this->resolveGeneric($typeNode);
         }
 
         throw new ResolveException("No suitable adapter found for '$typeNode' type");
@@ -182,6 +175,27 @@ class AdapterResolver {
         return new ModelAdapter($wrapper->node, $modelProperties, $factory,
             !$this->config->omitUnmatchedKeys,
             !$this->config->caseSensitive);
+    }
+
+    /**
+     * @param GenericTypeNode $typeNode
+     * @return AdapterInterface<?>
+     */
+    private function resolveGeneric($typeNode) {
+        $adapter = $this->resolveWrapper(new TypeWrapper($typeNode->type));
+        if (!($adapter instanceof SingleGenericAdapter)) {
+            throw new ResolveException("Type $typeNode->type not supplying a generic type");
+        }
+
+        // Положим, T[G1] = ...
+        // Тогда T<T> или невозможен, или идентичен T<T<mixed>>, что разрешимо.
+        // Следовательно, рекурсия невозможна.
+        if (count($typeNode->genericTypes) === 1) {
+            $genericAdapter = $this->resolve($typeNode->genericTypes[0]);
+            return new SingleGenericLambdaAdapter($adapter, $genericAdapter);
+        }
+
+        return $adapter;
     }
 
     private static function validateClass(ReflectionClass $class) {

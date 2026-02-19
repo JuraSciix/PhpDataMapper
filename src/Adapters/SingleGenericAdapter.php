@@ -5,18 +5,13 @@ namespace JuraSciix\DataMapper\Adapters;
 use JuraSciix\DataMapper\AdapterInterface;
 use JuraSciix\DataMapper\DataMapper;
 use LogicException;
-use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 
 /**
  * @template TValue
  * @template TGeneric
  * @template-implements AdapterInterface<TValue>
  */
-abstract class SingleGenericAdapter implements AdapterInterface, Unusable {
-
-    function __construct(
-        readonly TypeNode $typeNode
-    ) {}
+abstract class SingleGenericAdapter implements AdapterInterface {
 
     /**
      * @inheritDoc
@@ -30,10 +25,6 @@ abstract class SingleGenericAdapter implements AdapterInterface, Unusable {
      */
     final function serialize(DataMapper $mapper, mixed $data): mixed {
         throw new LogicException();
-    }
-
-    final function errorMessage(): string {
-        return "$this->typeNode requires specifying a generic type";
     }
 
     /**
