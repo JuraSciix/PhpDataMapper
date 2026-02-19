@@ -4,7 +4,6 @@ namespace JuraSciix\DataMapper\Adapters\Resolver;
 
 use JuraSciix\DataMapper\Adapters\Model\SetterInterface;
 use ReflectionMethod;
-use ReflectionProperty;
 
 /**
  * @template TValue

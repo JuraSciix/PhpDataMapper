@@ -3,7 +3,6 @@
 namespace JuraSciix\DataMapper\Utils;
 
 use AssertionError;
-use JuraSciix\DataMapper\Adapters\Resolver\Reflector;
 use Nette\Utils\Reflection;
 use PHPStan\PhpDocParser\Ast\Type\ArrayShapeNode;
 use PHPStan\PhpDocParser\Ast\Type\ArrayTypeNode;

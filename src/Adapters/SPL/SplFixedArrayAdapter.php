@@ -9,7 +9,6 @@ use JuraSciix\DataMapper\Exception\DeserializeException;
 use JuraSciix\DataMapper\Exception\SerializeException;
 use JuraSciix\DataMapper\Utils\StringHelper;
 use JuraSciix\DataMapper\Utils\TypeHelper;
-use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use SplFixedArray;
 
 /**

@@ -4,7 +4,6 @@ namespace JuraSciix\DataMapper\Adapters;
 
 use Closure;
 use JuraSciix\DataMapper\AdapterInterface;
-use JuraSciix\DataMapper\DataMapper;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 
 /**
