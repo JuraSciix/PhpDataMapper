@@ -9,7 +9,7 @@ use JuraSciix\DataMapper\DataMapper;
  * @template TValue
  * @template-implements AdapterInterface<TValue|null>
  */
-final class NullAdapter implements AdapterInterface {
+final class NullableAdapter implements AdapterInterface {
 
     /**
      * @param AdapterInterface<TValue> $adapter

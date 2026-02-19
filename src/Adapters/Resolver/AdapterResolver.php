@@ -6,7 +6,7 @@ use JuraSciix\DataMapper\AdapterInterface;
 use JuraSciix\DataMapper\Adapters\ArrayAdapter;
 use JuraSciix\DataMapper\Adapters\Model\Property;
 use JuraSciix\DataMapper\Adapters\ModelAdapter;
-use JuraSciix\DataMapper\Adapters\NullAdapter;
+use JuraSciix\DataMapper\Adapters\NullableAdapter;
 use JuraSciix\DataMapper\Adapters\SingleGenericAdapter;
 use JuraSciix\DataMapper\Adapters\SingleGenericLambdaAdapter;
 use JuraSciix\DataMapper\DataProperty;
@@ -121,7 +121,7 @@ class AdapterResolver {
 
         if ($typeNode instanceof NullableTypeNode) {
             $adapter = $this->resolve($typeNode->type);
-            return new NullAdapter($adapter);
+            return new NullableAdapter($adapter);
         }
 
         if ($typeNode instanceof ArrayTypeNode) {
