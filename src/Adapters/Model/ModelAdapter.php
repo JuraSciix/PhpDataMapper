@@ -1,11 +1,9 @@
 <?php
 
-namespace JuraSciix\DataMapper\Adapters;
+namespace JuraSciix\DataMapper\Adapters\Model;
 
 use Exception;
 use JuraSciix\DataMapper\AdapterInterface;
-use JuraSciix\DataMapper\Adapters\Model\FactoryInterface;
-use JuraSciix\DataMapper\Adapters\Model\Property;
 use JuraSciix\DataMapper\DataMapper;
 use JuraSciix\DataMapper\Exception\DeserializeException;
 use JuraSciix\DataMapper\Exception\SerializeException;
