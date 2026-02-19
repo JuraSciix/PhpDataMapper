@@ -22,7 +22,8 @@ final class Builder {
      * @return self
      */
     function registerAdapter(string $type, AdapterInterface $adapter) {
-        $this->config->adapters->put($type, $adapter);
+        $this->config->deserializers->put($type, $adapter);
+        $this->config->serializers->put($type, $adapter);
         return $this;
     }
 
@@ -96,7 +97,7 @@ final class Builder {
      */
     function build() {
         $this->config->registerBuiltinAdapters();
-        $this->config->registerSplAdapters();
+        $this->config->registerSplAdapters($this);
         return $this->mapper;
     }
 }

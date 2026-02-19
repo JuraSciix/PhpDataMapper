@@ -1,11 +1,9 @@
 <?php
 
-namespace JuraSciix\DataMapper\Adapters;
+namespace JuraSciix\DataMapper\Adapters\Model;
 
 use Exception;
 use JuraSciix\DataMapper\AdapterInterface;
-use JuraSciix\DataMapper\Adapters\Model\FactoryInterface;
-use JuraSciix\DataMapper\Adapters\Model\Property;
 use JuraSciix\DataMapper\DataMapper;
 use JuraSciix\DataMapper\Exception\DeserializeException;
 use JuraSciix\DataMapper\Exception\SerializeException;
@@ -43,7 +41,6 @@ final class ModelAdapter implements AdapterInterface {
      * @inheritDoc
      */
     function deserialize(DataMapper $mapper, mixed $data): mixed {
-        // Заметка: пустой массив считается списком, :D
         if (!TypeHelper::isArray($data)) {
             throw new DeserializeException(
                 StringHelper::interpolate("Expected array (not list), but received ??", $data));

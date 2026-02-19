@@ -2,10 +2,12 @@
 
 namespace JuraSciix\UnitTest\DataMapper;
 
+use DateTime;
 use JuraSciix\DataMapper\DataMapper;
 use JuraSciix\DataMapper\Exception\DataMapperException;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use SplFixedArray;
 
 class BasicTest extends TestCase {
     private DataMapper $mapper;
@@ -93,7 +95,7 @@ class BasicTest extends TestCase {
     function badGuy(): void {
         $class = BadGuy::class;
         self::expectExceptionObject(new DataMapperException(
-            "Unable to resolve $class: No suitable adapter found for 'object' type"));
+            "Unable to resolve $class: No suitable deserializer found for 'object' type"));
 
         $data = [
             'wtf' => 1
@@ -112,8 +114,8 @@ class BasicTest extends TestCase {
     }
 
     #[Test]
-    function deserializeArray(): void {
-        $perfect =  new BarList();
+    function deserializeArrayOk(): void {
+        $perfect = new BarList();
         $perfect->setBarList([
             new Bar(1),
             new Bar(2),
@@ -132,5 +134,52 @@ class BasicTest extends TestCase {
         $barList = $this->mapper->deserialize($data, BarList::class);
 
         self::assertEquals($perfect, $barList);
+    }
+
+    #[Test]
+    function deserializeMixedOk(): void {
+        $perfect = new MixedContainer();
+        $perfect->anything = ['foo' => 'bar'];
+
+        $data = [
+            'anything' => [
+                'foo' => 'bar'
+            ]
+        ];
+        $object = $this->mapper->deserialize($data, MixedContainer::class);
+
+        self::assertEquals($perfect, $object);
+    }
+
+    #[Test]
+    function deserializeSplFixedArrayOk(): void {
+        $barList = new SplFixedArray(1);
+        $barList[0] = new Bar(123);
+        $perfect = new BarList2();
+        $perfect->setBarList($barList);
+
+        $data = [
+            'bar_list' => [
+                ['foobar' => 123]
+            ]
+        ];
+        $object = $this->mapper->deserialize($data, BarList2::class);
+
+        self::assertEquals($perfect, $object);
+    }
+
+    #[Test]
+    function deserializeSplFixedArrayFail1(): void {
+        $class = BarList2::class;
+        self::expectExceptionObject(new DataMapperException(
+            "Cannot deserialize $.bar_list.[0] for $class: No required 'foobar' found"));
+        $data = [
+            'bar_list' => [
+                [
+                    'no foobar:D' => null
+                ]
+            ]
+        ];
+        $this->mapper->deserialize($data, BarList2::class);
     }
 }
