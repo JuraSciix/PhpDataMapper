@@ -56,14 +56,17 @@ class TypeHelper {
      * @return string[]
      */
     static function getSuperTypes(string $type) {
-        $implements = class_implements($type);
-        if ($implements === false) {
-            throw new InvalidArgumentException($type);
+        if (!TypeHelper::isValidType($type)) {
+            throw new InvalidArgumentException("Invalid type: $type");
         }
-        $parents = class_parents($type);
-        if ($parents === false) {
-            throw new InvalidArgumentException($type);
-        }
-        return array_merge($parents, $implements);
+        return array_merge(class_parents($type), class_implements($type));
+    }
+
+    /**
+     * Проверяет, является ли тип корректным
+     * @return bool
+     */
+    static function isValidType(string $type) {
+        return class_exists($type) || interface_exists($type);
     }
 }

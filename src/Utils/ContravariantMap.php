@@ -2,6 +2,8 @@
 
 namespace JuraSciix\DataMapper\Utils;
 
+use InvalidArgumentException;
+
 /**
  * @template V
  */
@@ -14,18 +16,23 @@ final class ContravariantMap {
      * @param V $value
      */
     function put(string $type, mixed $value): void {
-        // Сначала запрашиваем супертипы, чтобы проверить $type на корректность
-        foreach (TypeHelper::getSuperTypes($type) as $superType) {
-            $this->map[$superType] = $value;
+        if (!TypeHelper::isValidType($type)) {
+            throw new InvalidArgumentException("Invalid type: $type");
         }
 
         $this->map[$type] = $value;
+        foreach (TypeHelper::getSuperTypes($type) as $superType) {
+            $this->map[$superType] = $value;
+        }
     }
 
     /**
      * @return V|null
      */
     function get(string $value): mixed {
+        if (!TypeHelper::isValidType($value)) {
+            throw new InvalidArgumentException("Invalid type: $value");
+        }
         return $this->map[$value] ?? null;
     }
 
@@ -33,6 +40,9 @@ final class ContravariantMap {
      * @return bool
      */
     function contains(string $type) {
+        if (!TypeHelper::isValidType($type)) {
+            return false;
+        }
         return array_key_exists($type, $this->map);
     }
 
