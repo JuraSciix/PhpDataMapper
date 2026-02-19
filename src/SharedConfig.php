@@ -12,6 +12,7 @@ use JuraSciix\DataMapper\Adapters\DeserializeMatchingAdapterWrapper;
 use JuraSciix\DataMapper\Adapters\EmptyAdapter;
 use JuraSciix\DataMapper\Adapters\SPL\SplFixedArrayAdapter;
 use JuraSciix\DataMapper\Utils\ContravariantMap;
+use JuraSciix\DataMapper\Utils\CovariantMap;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use SplFixedArray;
 
@@ -24,6 +25,22 @@ class SharedConfig {
      * @var ContravariantMap<AdapterInterface<?>>
      */
     public readonly ContravariantMap $adapters;
+
+    // Заметка: Адаптеры выполняют сериализацию и десериализацию.
+    // Десериализация может быть контравариантной,
+    // а сериализация ковариантной.
+    // Либо адаптеры инвариантны друг к другу,
+    // либо должны храниться в двух структурах, как ниже.
+
+    /**
+     * @var ContravariantMap<AdapterInterface<?>>
+     */
+    public readonly ContravariantMap $deserializers;
+
+    /**
+     * @var CovariantMap<AdapterInterface<?>>
+     */
+    public readonly CovariantMap $serializers;
 
     /**
      * @var array<string, AdapterInterface<?>>
@@ -43,7 +60,8 @@ class SharedConfig {
     public ?DateTimeZone $timeZone = null;
 
     function __construct() {
-        $this->adapters = new ContravariantMap();
+        $this->deserializers = new ContravariantMap();
+        $this->serializers = new CovariantMap();
     }
 
     function registerBuiltinAdapters(): void {
@@ -65,15 +83,15 @@ class SharedConfig {
         $this->builtinAdapters[$type] = $adapter;
     }
 
-    function registerSplAdapters(): void {
+    function registerSplAdapters(Builder $builder): void {
         // Между двумя имплементациями DateTimeInterface,
         // приоритет получит та, которая была последней зарегистрирована.
-        $this->adapters->put(DateTime::class,
+        $builder->registerAdapter(DateTime::class,
             new DateTimeImmutableAdapter($this->dateTimeFormat, $this->timeZone, $this->allowTypeConverting));
         // Последним регистрируется DateTime.
-        $this->adapters->put(DateTime::class,
+        $builder->registerAdapter(DateTime::class,
             new DateTimeAdapter($this->dateTimeFormat, $this->timeZone, $this->allowTypeConverting));
 
-        $this->adapters->put(SplFixedArray::class, new SplFixedArrayAdapter());
+        $builder->registerAdapter(SplFixedArray::class, new SplFixedArrayAdapter());
     }
 }

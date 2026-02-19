@@ -3,6 +3,9 @@
 namespace JuraSciix\DataMapper;
 
 use JuraSciix\DataMapper\Adapters\Resolver\AdapterResolver;
+use JuraSciix\DataMapper\Adapters\Resolver\DeserializerResolver;
+use JuraSciix\DataMapper\Adapters\Resolver\Reflector;
+use JuraSciix\DataMapper\Adapters\Resolver\SerializerResolver;
 use JuraSciix\DataMapper\Exception\DataMapperException;
 use JuraSciix\DataMapper\Exception\DeserializeException;
 use JuraSciix\DataMapper\Exception\ResolveException;
@@ -28,11 +31,14 @@ final class DataMapper {
 
     private readonly SharedConfig $config;
 
-    private readonly AdapterResolver $resolver;
+    private readonly AdapterResolver $serializerResolver;
+    private readonly AdapterResolver $deserializerResolver;
 
     function __construct() {
         $this->config = new SharedConfig();
-        $this->resolver = new AdapterResolver($this->config);
+        $reflector = new Reflector();
+        $this->serializerResolver = new SerializerResolver($this->config, $reflector);
+        $this->deserializerResolver = new DeserializerResolver($this->config, $reflector);
     }
 
     /**
@@ -76,7 +82,7 @@ final class DataMapper {
      */
     private function doDeserialize($data, $typeNode) {
         try {
-            $adapter = $this->resolver->resolve($typeNode);
+            $adapter = $this->deserializerResolver->resolve($typeNode);
             return $adapter->deserialize($this, $data);
         } catch (ResolveException $e) {
             $message = $e->getMessage();
@@ -104,7 +110,7 @@ final class DataMapper {
      */
     function serialize(mixed $data): mixed {
         $typeNode = new IdentifierTypeNode(is_object($data) ? get_class($data) : gettype($data));
-        $adapter = $this->resolver->resolve($typeNode);
+        $adapter = $this->serializerResolver->resolve($typeNode);
         try {
             return $adapter->serialize($this, $data);
         } catch (ResolveException $e) {

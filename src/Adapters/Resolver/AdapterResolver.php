@@ -22,7 +22,7 @@ use PHPStan\PhpDocParser\Ast\Type\NullableTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use ReflectionClass;
 
-class AdapterResolver {
+abstract class AdapterResolver {
 
     /**
      * @var array<string, AdapterInterface<?>>
@@ -32,16 +32,14 @@ class AdapterResolver {
     /** @var class-string[] Типы, которые прямо сейчас строятся. Это защита от рекурсии. */
     private $processing = [];
 
-    private readonly Reflector $reflector;
-
     function __construct(
-        private readonly SharedConfig $config
-    ) {
-        $this->reflector = new Reflector();
-    }
+        readonly SharedConfig $config,
+        readonly Reflector $reflector
+    ) {}
 
     /**
      * @template TValue
+     * @param TypeNode $typeNode
      * @return AdapterInterface<TValue>
      */
     function resolve(TypeNode $typeNode): AdapterInterface {
@@ -106,11 +104,12 @@ class AdapterResolver {
         $typeNode = $wrapper->node;
 
         if ($typeNode instanceof IdentifierTypeNode) {
-            $typeName = $typeNode->name;
             // Заметка: $typeName должен быть существующим типом.
             //  Все примитивные типы проверяются ранее.
-            if ($this->config->adapters->contains($typeName)) {
-                return $this->config->adapters->get($typeName);
+            $typeName = $typeNode->name;
+            $foundAdapter = $this->tryResolve($typeName);
+            if (isset($foundAdapter)) {
+                return $foundAdapter;
             }
             if (class_exists($typeName)) {
                 $class = ReflectionHelper::getReflectionClassSurely($typeName);
@@ -135,10 +134,25 @@ class AdapterResolver {
             return $this->resolveGeneric($typeNode);
         }
 
-        throw new ResolveException("No suitable adapter found for '$typeNode' type");
+        return $this->failure($typeNode);
     }
 
-    protected function resolveClass(TypeWrapper $wrapper, ReflectionClass $class): AdapterInterface {
+    /**
+     * @return AdapterInterface<?>|null
+     */
+    protected abstract function tryResolve(string $type): ?AdapterInterface;
+
+    /**
+     * @return AdapterInterface<?>
+     */
+    protected abstract function failure(TypeNode $typeNode): AdapterInterface;
+
+    /**
+     * @template TValue
+     * @param ReflectionClass<TValue> $class
+     * @return ModelAdapter<TValue>
+     */
+    private function resolveClass($wrapper, $class) {
         $modelProperties = [];
 
         foreach ($class->getProperties() as $property) {

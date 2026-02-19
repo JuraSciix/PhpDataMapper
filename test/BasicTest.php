@@ -2,6 +2,7 @@
 
 namespace JuraSciix\UnitTest\DataMapper;
 
+use DateTime;
 use JuraSciix\DataMapper\DataMapper;
 use JuraSciix\DataMapper\Exception\DataMapperException;
 use PHPUnit\Framework\Attributes\Test;
@@ -94,7 +95,7 @@ class BasicTest extends TestCase {
     function badGuy(): void {
         $class = BadGuy::class;
         self::expectExceptionObject(new DataMapperException(
-            "Unable to resolve $class: No suitable adapter found for 'object' type"));
+            "Unable to resolve $class: No suitable deserializer found for 'object' type"));
 
         $data = [
             'wtf' => 1

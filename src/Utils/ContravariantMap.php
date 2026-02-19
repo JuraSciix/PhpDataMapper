@@ -29,11 +29,11 @@ final class ContravariantMap {
     /**
      * @return V|null
      */
-    function get(string $value): mixed {
-        if (!TypeHelper::isValidType($value)) {
-            throw new InvalidArgumentException("Invalid type: $value");
+    function get(string $key): mixed {
+        if (!TypeHelper::isValidType($key)) {
+            throw new InvalidArgumentException("Invalid type: $key");
         }
-        return $this->map[$value] ?? null;
+        return $this->map[$key] ?? null;
     }
 
     /**
