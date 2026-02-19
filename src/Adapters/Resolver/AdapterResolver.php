@@ -51,6 +51,11 @@ class AdapterResolver {
         // Бездумно кешируем. Заметка: Это вредно, кстати.
         $typeString = strval($tn);
 
+        // Оптимизация: адаптеры для встроенных типов уже кешированы, поэтому проверяем их первыми.
+        if (array_key_exists($typeString, $this->config->builtinAdapters)) {
+            return $this->config->builtinAdapters[$typeString];
+        }
+
         if (in_array($typeString, $this->processing, true)) {
             $last = $this->processing[sizeof($this->processing) - 1];
             throw new ResolveException(
@@ -83,9 +88,6 @@ class AdapterResolver {
     private function doResolve($typeNode) {
         if ($typeNode instanceof IdentifierTypeNode) {
             $typeName = $typeNode->name;
-            if (array_key_exists($typeName, $this->config->builtinAdapters)) {
-                return $this->config->builtinAdapters[$typeName];
-            }
             if ($this->config->adapters->contains($typeName)) {
                 return $this->config->adapters->get($typeName);
             }
@@ -138,7 +140,7 @@ class AdapterResolver {
 
             // Вместо сложной логики, просто смотрим на тип свойства...
             // Это, скажем так, real deal.
-            $propertyTypeNode = $this->reflector->resolvePropertyType($property) ?: new IdentifierTypeNode('mixed');
+            $propertyTypeNode = $this->reflector->resolvePropertyType($property) ?: DocTypeHelper::mixedType();
 
             $getterMethod = $this->reflector->tryResolveGetterOf($property);
             $setterMethod = $this->reflector->tryResolveSetterOf($property);

@@ -22,6 +22,13 @@ use ReflectionUnionType;
 class DocTypeHelper {
 
     /**
+     * @return IdentifierTypeNode
+     */
+    static function mixedType() {
+        return new IdentifierTypeNode('mixed');
+    }
+
+    /**
      * @return TypeNode
      */
     static function toPhpDocTypeNode(ReflectionType $type) {
@@ -30,7 +37,7 @@ class DocTypeHelper {
             // Заметка: PHP позволит задать тип null, но не позволит задать ?null.
             // Тип null формально "разрешает null-значения", поэтому нужно делать проверку.
             // Гениально?
-            if ($type->getName() != 'null' && $type->allowsNull()) {
+            if ($type->allowsNull() && $type->getName() != 'null') {
                 $node = new NullableTypeNode($node);
             }
             return $node;
