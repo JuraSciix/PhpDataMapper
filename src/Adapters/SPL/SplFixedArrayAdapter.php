@@ -17,9 +17,6 @@ use SplFixedArray;
  * @template-implements AdapterInterface<SplFixedArray<TComponent>>
  */
 class SplFixedArrayAdapter extends SingleGenericAdapter {
-    function __construct() {
-        parent::__construct(new IdentifierTypeNode(SplFixedArray::class));
-    }
 
     /**
      * @inheritDoc
