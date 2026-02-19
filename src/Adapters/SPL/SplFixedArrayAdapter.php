@@ -16,7 +16,7 @@ use SplFixedArray;
  * @template TComponent
  * @template-implements AdapterInterface<SplFixedArray<TComponent>>
  */
-class SplFixedArrayAdapter extends SingleGenericAdapter {
+final class SplFixedArrayAdapter extends SingleGenericAdapter {
 
     /**
      * @inheritDoc
