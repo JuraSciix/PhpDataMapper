@@ -1,9 +1,8 @@
 <?php
 
-namespace JuraSciix\DataMapper\Adapters;
+namespace JuraSciix\DataMapper\Adapters\DateTime;
 
 use DateTime;
-use DateTimeImmutable;
 use DateTimeZone;
 use JuraSciix\DataMapper\AdapterInterface;
 use JuraSciix\DataMapper\DataMapper;

@@ -5,7 +5,7 @@ namespace JuraSciix\DataMapper;
 use DateTime;
 use DateTimeInterface;
 use DateTimeZone;
-use JuraSciix\DataMapper\Adapters\DateTimeAdapter;
+use JuraSciix\DataMapper\Adapters\DateTime\DateTimeAdapter;
 use JuraSciix\DataMapper\Adapters\DeserializeAdapterWrapper;
 use JuraSciix\DataMapper\Adapters\DeserializeMatchingAdapterWrapper;
 use JuraSciix\DataMapper\Utils\ContravariantMap;
