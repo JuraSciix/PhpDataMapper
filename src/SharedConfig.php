@@ -60,6 +60,7 @@ class SharedConfig {
     }
 
     function registerSplAdapters(): void {
-        $this->adapters->put(DateTime::class, new DateTimeAdapter($this->dateTimeFormat, $this->timeZone));
+        $this->adapters->put(DateTime::class,
+            new DateTimeAdapter($this->dateTimeFormat, $this->timeZone, $this->allowTypeConverting));
     }
 }

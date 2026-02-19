@@ -12,18 +12,25 @@ use JuraSciix\DataMapper\Exception\SerializeException;
 use JuraSciix\DataMapper\Utils\StringHelper;
 
 /**
- * @template-implements AdapterInterface<DateTimeImmutable>
+ * Адаптер, который приводит строку к значению типа {@link DateTime}.
+ *
+ * @template-implements AdapterInterface<DateTime>
  */
-class DateTimeAdapter implements AdapterInterface {
+final class DateTimeAdapter implements AdapterInterface {
 
     function __construct(
         readonly string $format,
-        readonly ?DateTimeZone $timeZone
+        readonly ?DateTimeZone $timeZone,
+        readonly bool $allowIntegers
     ) {}
 
     function deserialize(DataMapper $mapper, mixed $data): DateTime {
+        if (is_int($data) && $this->allowIntegers) {
+            $data = strval($data);
+        }
         if (!is_string($data)) {
-            throw new DeserializeException(StringHelper::interpolate("Expected a string, but received: ??", $data));
+            throw new DeserializeException(
+                StringHelper::interpolate("Expected a string, but received: ??", $data));
         }
         $dateTime = DateTime::createFromFormat($this->format, $data, $this->timeZone);
         if ($dateTime === false) {
