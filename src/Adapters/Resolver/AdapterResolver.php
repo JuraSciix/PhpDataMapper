@@ -4,6 +4,7 @@ namespace JuraSciix\DataMapper\Adapters\Resolver;
 
 use JuraSciix\DataMapper\AdapterInterface;
 use JuraSciix\DataMapper\Adapters\ArrayAdapter;
+use JuraSciix\DataMapper\Adapters\EmptyAdapter;
 use JuraSciix\DataMapper\Adapters\Model\Property;
 use JuraSciix\DataMapper\Adapters\ModelAdapter;
 use JuraSciix\DataMapper\Adapters\NullableAdapter;
@@ -46,9 +47,8 @@ class AdapterResolver {
     function resolve(TypeNode $typeNode): AdapterInterface {
         $adapter = $this->resolveWrapper(new TypeWrapper($typeNode));
         if ($adapter instanceof SingleGenericAdapter) {
-            // Дополняем тип
-//            return new SingleGenericLambdaAdapter($adapter, EmptyAdapter::instance());
-            throw new ResolveException("$typeNode requires specifying a generic type");
+            // Доопределяем тип T<unresolved> до T<mixed>
+            return new SingleGenericLambdaAdapter($adapter, EmptyAdapter::instance());
         }
         return $adapter;
     }
@@ -107,6 +107,8 @@ class AdapterResolver {
 
         if ($typeNode instanceof IdentifierTypeNode) {
             $typeName = $typeNode->name;
+            // Заметка: $typeName должен быть существующим типом.
+            //  Все примитивные типы проверяются ранее.
             if ($this->config->adapters->contains($typeName)) {
                 return $this->config->adapters->get($typeName);
             }

@@ -181,13 +181,4 @@ class BasicTest extends TestCase {
         ];
         $this->mapper->deserialize($data, BarList2::class);
     }
-
-    #[Test]
-    function deserializeSplFixedArrayFail(): void {
-        self::expectExceptionObject(new DataMapperException(
-                "Unable to resolve SplFixedArray: SplFixedArray requires specifying a generic type"));
-
-        $data = [];
-        $this->mapper->deserialize($data, SplFixedArray::class);
-    }
 }
