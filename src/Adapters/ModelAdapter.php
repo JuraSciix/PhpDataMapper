@@ -43,7 +43,6 @@ final class ModelAdapter implements AdapterInterface {
      * @inheritDoc
      */
     function deserialize(DataMapper $mapper, mixed $data): mixed {
-        // Заметка: пустой массив считается списком, :D
         if (!TypeHelper::isArray($data)) {
             throw new DeserializeException(
                 StringHelper::interpolate("Expected array (not list), but received ??", $data));
