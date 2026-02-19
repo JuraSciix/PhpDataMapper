@@ -23,18 +23,20 @@ class DateTimeAdapter implements AdapterInterface {
 
     function deserialize(DataMapper $mapper, mixed $data): DateTime {
         if (!is_string($data)) {
-            throw new DeserializeException(StringHelper::interpolate("Expected string, received ??", $data));
+            throw new DeserializeException(StringHelper::interpolate("Expected a string, but received: ??", $data));
         }
         $dateTime = DateTime::createFromFormat($this->format, $data, $this->timeZone);
         if ($dateTime === false) {
-            throw new DeserializeException(StringHelper::interpolate());
+            throw new DeserializeException(
+                StringHelper::interpolate("Value ?? does not match to format ??", $data, $this->format));
         }
         return $dateTime;
     }
 
     function serialize(DataMapper $mapper, mixed $data): string {
         if (!($data instanceof DateTime)) {
-            throw new SerializeException("Not a DateTime");
+            throw new SerializeException(
+                StringHelper::interpolate("Expected an instance of DateTime, but received: ??", $data));
         }
 
         return $data->format($this->format);
