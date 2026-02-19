@@ -7,9 +7,7 @@ use JuraSciix\DataMapper\DataMapper;
 use LogicException;
 
 /**
- * @template TValue
- * @template TGeneric
- * @template-implements AdapterInterface<TValue>
+ * @template-implements AdapterInterface<?>
  */
 abstract class SingleGenericAdapter implements AdapterInterface {
 
@@ -28,16 +26,20 @@ abstract class SingleGenericAdapter implements AdapterInterface {
     }
 
     /**
+     * @template TGeneric
+     *
      * @param DataMapper $mapper
      * @param mixed $data
      * @param AdapterInterface<TGeneric> $adapter
-     * @return TValue
+     * @return mixed
      */
     abstract function deserializeWithGeneric(DataMapper $mapper, mixed $data, AdapterInterface $adapter): mixed;
 
     /**
+     * @template TGeneric
+     *
      * @param DataMapper $mapper
-     * @param TValue $data
+     * @param mixed $data
      * @param AdapterInterface<TGeneric> $adapter
      * @return mixed
      */

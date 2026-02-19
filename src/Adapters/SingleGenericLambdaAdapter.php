@@ -6,14 +6,13 @@ use JuraSciix\DataMapper\AdapterInterface;
 use JuraSciix\DataMapper\DataMapper;
 
 /**
- * @template TValue
  * @template TGeneric
- * @template-implements AdapterInterface<TValue>
+ * @template-implements AdapterInterface<mixed>
  */
 final class SingleGenericLambdaAdapter implements AdapterInterface {
 
     /**
-     * @param SingleGenericAdapter<TValue, TGeneric> $adapter
+     * @param SingleGenericAdapter $adapter
      * @param AdapterInterface<TGeneric> $genericAdapter
      */
     function __construct(

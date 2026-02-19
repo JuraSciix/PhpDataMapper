@@ -12,13 +12,15 @@ use JuraSciix\DataMapper\Utils\TypeHelper;
 use SplFixedArray;
 
 /**
- * @template TComponent
- * @template-implements AdapterInterface<SplFixedArray<TComponent>>
+ * @template-implements AdapterInterface<?>
  */
 final class SplFixedArrayAdapter extends SingleGenericAdapter {
 
     /**
-     * @inheritDoc
+     * @template TGeneric
+     *
+     * @param AdapterInterface<TGeneric> $adapter
+     * @return SplFixedArray<TGeneric>
      */
     function deserializeWithGeneric(DataMapper $mapper, mixed $data, AdapterInterface $adapter): SplFixedArray {
         if (!TypeHelper::isList($data)) {
@@ -39,7 +41,10 @@ final class SplFixedArrayAdapter extends SingleGenericAdapter {
     }
 
     /**
-     * @inheritDoc
+     * @template TGeneric
+     * @param SplFixedArray<TGeneric> $data
+     * @param AdapterInterface<TGeneric> $adapter
+     * @return TGeneric[]
      */
     function serializeWithGeneric(DataMapper $mapper, mixed $data, AdapterInterface $adapter): array {
         if (!($data instanceof SplFixedArray)) {
