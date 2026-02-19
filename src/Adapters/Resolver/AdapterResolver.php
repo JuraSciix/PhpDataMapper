@@ -42,10 +42,9 @@ class AdapterResolver {
 
     /**
      * @template TValue
-     * @param TypeNode $typeNode
      * @return AdapterInterface<TValue>
      */
-    function resolve(TypeNode $typeNode): AdapterInterface {
+    function resolve(TypeNode $typeNode, bool $check = true): AdapterInterface {
         $tn = DocTypeHelper::canonize($typeNode);
 
         // Бездумно кешируем. Заметка: Это вредно, кстати.
@@ -70,7 +69,7 @@ class AdapterResolver {
 
         try {
             $adapter = $this->doResolve($tn);
-            if ($adapter instanceof Unusable) {
+            if ($check && $adapter instanceof Unusable) {
                 throw new ResolveException($adapter->errorMessage());
             }
             $this->cache[$typeString] = $adapter;
@@ -111,7 +110,7 @@ class AdapterResolver {
         }
 
         if ($typeNode instanceof GenericTypeNode) {
-            $adapter = $this->resolve($typeNode->type);
+            $adapter = $this->resolve($typeNode->type, false);
 
             if (count($typeNode->genericTypes) === 1 && ($adapter instanceof SingleGenericAdapter)) {
                 $genericAdapter = $this->resolve($typeNode->genericTypes[0]);
