@@ -6,6 +6,7 @@ use DateTime;
 use DateTimeInterface;
 use DateTimeZone;
 use JuraSciix\DataMapper\Adapters\DateTime\DateTimeAdapter;
+use JuraSciix\DataMapper\Adapters\DateTime\DateTimeImmutableAdapter;
 use JuraSciix\DataMapper\Adapters\DeserializeAdapterWrapper;
 use JuraSciix\DataMapper\Adapters\DeserializeMatchingAdapterWrapper;
 use JuraSciix\DataMapper\Utils\ContravariantMap;
@@ -60,6 +61,11 @@ class SharedConfig {
     }
 
     function registerSplAdapters(): void {
+        // Между двумя имплементациями DateTimeInterface,
+        // приоритет получит та, которая была последней зарегистрирована.
+        $this->adapters->put(DateTime::class,
+            new DateTimeImmutableAdapter($this->dateTimeFormat, $this->timeZone, $this->allowTypeConverting));
+        // Последним регистрируется DateTime.
         $this->adapters->put(DateTime::class,
             new DateTimeAdapter($this->dateTimeFormat, $this->timeZone, $this->allowTypeConverting));
     }
