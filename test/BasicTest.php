@@ -6,6 +6,7 @@ use JuraSciix\DataMapper\DataMapper;
 use JuraSciix\DataMapper\Exception\DataMapperException;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use SplFixedArray;
 
 class BasicTest extends TestCase {
     private DataMapper $mapper;
@@ -147,5 +148,46 @@ class BasicTest extends TestCase {
         $object = $this->mapper->deserialize($data, MixedContainer::class);
 
         self::assertEquals($perfect, $object);
+    }
+
+    #[Test]
+    function deserializeSplFixedArrayOk(): void {
+        $barList = new SplFixedArray(1);
+        $barList[0] = new Bar(123);
+        $perfect = new BarList2();
+        $perfect->setBarList($barList);
+
+        $data = [
+            'bar_list' => [
+                ['foobar' => 123]
+            ]
+        ];
+        $object = $this->mapper->deserialize($data, BarList2::class);
+
+        self::assertEquals($perfect, $object);
+    }
+
+    #[Test]
+    function deserializeSplFixedArrayFail1(): void {
+        $class = BarList2::class;
+        self::expectExceptionObject(new DataMapperException(
+            "Cannot deserialize $.bar_list.[0] for $class: No required 'foobar' found"));
+        $data = [
+            'bar_list' => [
+                [
+                    'no foobar:D' => null
+                ]
+            ]
+        ];
+        $this->mapper->deserialize($data, BarList2::class);
+    }
+
+    #[Test]
+    function deserializeSplFixedArrayFail(): void {
+        self::expectExceptionObject(new DataMapperException(
+                "Unable to resolve SplFixedArray: SplFixedArray requires specifying a generic type"));
+
+        $data = [];
+        $this->mapper->deserialize($data, SplFixedArray::class);
     }
 }

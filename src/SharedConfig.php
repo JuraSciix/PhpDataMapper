@@ -10,8 +10,10 @@ use JuraSciix\DataMapper\Adapters\DateTime\DateTimeImmutableAdapter;
 use JuraSciix\DataMapper\Adapters\DeserializeAdapterWrapper;
 use JuraSciix\DataMapper\Adapters\DeserializeMatchingAdapterWrapper;
 use JuraSciix\DataMapper\Adapters\EmptyAdapter;
+use JuraSciix\DataMapper\Adapters\SPL\SplFixedArrayAdapter;
 use JuraSciix\DataMapper\Utils\ContravariantMap;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
+use SplFixedArray;
 
 /**
  * @internal
@@ -71,5 +73,7 @@ class SharedConfig {
         // Последним регистрируется DateTime.
         $this->adapters->put(DateTime::class,
             new DateTimeAdapter($this->dateTimeFormat, $this->timeZone, $this->allowTypeConverting));
+
+        $this->adapters->put(SplFixedArray::class, new SplFixedArrayAdapter());
     }
 }
