@@ -7,12 +7,16 @@ use JuraSciix\DataMapper\Adapters\ArrayAdapter;
 use JuraSciix\DataMapper\Adapters\Model\Property;
 use JuraSciix\DataMapper\Adapters\ModelAdapter;
 use JuraSciix\DataMapper\Adapters\NullAdapter;
+use JuraSciix\DataMapper\Adapters\Unusable;
+use JuraSciix\DataMapper\Adapters\SingleGenericAdapter;
+use JuraSciix\DataMapper\Adapters\SingleGenericLambdaAdapter;
 use JuraSciix\DataMapper\DataProperty;
 use JuraSciix\DataMapper\Exception\ResolveException;
 use JuraSciix\DataMapper\SharedConfig;
 use JuraSciix\DataMapper\Utils\DocTypeHelper;
 use JuraSciix\DataMapper\Utils\ReflectionHelper;
 use PHPStan\PhpDocParser\Ast\Type\ArrayTypeNode;
+use PHPStan\PhpDocParser\Ast\Type\GenericTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\NullableTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
@@ -61,6 +65,9 @@ class AdapterResolver {
 
         try {
             $adapter = $this->doResolve($tn);
+            if ($adapter instanceof Unusable) {
+                throw new ResolveException($adapter->errorMessage());
+            }
             $this->cache[$typeString] = $adapter;
             return $adapter;
         } finally {
@@ -99,6 +106,15 @@ class AdapterResolver {
         if ($typeNode instanceof ArrayTypeNode) {
             $componentAdapter = $this->resolve($typeNode->type);
             return new ArrayAdapter($componentAdapter);
+        }
+
+        if ($typeNode instanceof GenericTypeNode) {
+            $adapter = $this->resolve($typeNode->type);
+
+            if (count($typeNode->genericTypes) === 1 && ($adapter instanceof SingleGenericAdapter)) {
+                $genericAdapter = $this->resolve($typeNode->genericTypes[0]);
+                return new SingleGenericLambdaAdapter($adapter, $genericAdapter);
+            }
         }
 
         throw new ResolveException("No suitable adapter found for '$typeNode' type");
