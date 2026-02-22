@@ -5,11 +5,11 @@ namespace JuraSciix\DataMapper\Adapters\Resolver;
 use JuraSciix\DataMapper\AdapterInterface;
 use JuraSciix\DataMapper\Adapters\ArrayAdapter;
 use JuraSciix\DataMapper\Adapters\EmptyAdapter;
+use JuraSciix\DataMapper\Adapters\GenericAdapter;
+use JuraSciix\DataMapper\Adapters\GenericAdapterLambda;
 use JuraSciix\DataMapper\Adapters\Model\ModelAdapter;
 use JuraSciix\DataMapper\Adapters\Model\Property;
 use JuraSciix\DataMapper\Adapters\NullableAdapter;
-use JuraSciix\DataMapper\Adapters\SingleGenericAdapter;
-use JuraSciix\DataMapper\Adapters\SingleGenericLambdaAdapter;
 use JuraSciix\DataMapper\DataProperty;
 use JuraSciix\DataMapper\Exception\ResolveException;
 use JuraSciix\DataMapper\SharedConfig;
@@ -44,9 +44,10 @@ abstract class AdapterResolver {
      */
     function resolve(TypeNode $typeNode): AdapterInterface {
         $adapter = $this->resolveWrapper(new TypeWrapper($typeNode));
-        if ($adapter instanceof SingleGenericAdapter) {
+        if ($adapter instanceof GenericAdapter) {
             // Доопределяем тип T<unresolved> до T<mixed>
-            return new SingleGenericLambdaAdapter($adapter, EmptyAdapter::instance());
+            $templates = array_fill(0, $adapter->getGenericTypeCount(), EmptyAdapter::instance());
+            return new GenericAdapterLambda($adapter, $templates);
         }
         return $adapter;
     }
@@ -199,19 +200,25 @@ abstract class AdapterResolver {
      */
     private function resolveGeneric($typeNode) {
         $adapter = $this->resolveWrapper(new TypeWrapper($typeNode->type));
-        if (!($adapter instanceof SingleGenericAdapter)) {
-            throw new ResolveException("Type $typeNode->type not supplying a generic type");
+        if (!($adapter instanceof GenericAdapter)) {
+            throw new ResolveException("Type '$typeNode->type' not supplying a template types");
         }
 
         // Положим, T[G1] = ...
         // Тогда T<T> или невозможен, или идентичен T<T<mixed>>, что разрешимо.
         // Следовательно, рекурсия невозможна.
-        if (count($typeNode->genericTypes) === 1) {
-            $genericAdapter = $this->resolve($typeNode->genericTypes[0]);
-            return new SingleGenericLambdaAdapter($adapter, $genericAdapter);
+        $expectedCount = $adapter->getGenericTypeCount();
+        $actualCount = count($typeNode->genericTypes);
+        if ($actualCount != $expectedCount) {
+            throw new ResolveException(
+                "Type '$typeNode->type' requires $expectedCount generic types, but received $actualCount");
         }
 
-        return $adapter;
+        $genericAdapters = array_map(
+            callback: $this->resolve(...),
+            array: $typeNode->genericTypes
+        );
+        return new GenericAdapterLambda($adapter, $genericAdapters);
     }
 
     private static function validateClass(ReflectionClass $class) {

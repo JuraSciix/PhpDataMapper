@@ -8,6 +8,8 @@ use LogicException;
 
 /**
  * @template-implements AdapterInterface<mixed>
+ *
+ * @deprecated Используйте {@link GenericAdapter}. Будет удалено в следующей версии
  */
 abstract class DoubleGenericAdapter implements AdapterInterface {
 

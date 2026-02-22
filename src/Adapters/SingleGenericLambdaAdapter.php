@@ -8,6 +8,8 @@ use JuraSciix\DataMapper\DataMapper;
 /**
  * @template TGeneric
  * @template-implements AdapterInterface<mixed>
+ *
+ * @deprecated Будет удалено в следующей версии
  */
 final class SingleGenericLambdaAdapter implements AdapterInterface {
 

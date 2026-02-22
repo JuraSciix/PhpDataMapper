@@ -8,21 +8,21 @@ use LogicException;
 
 /**
  * @template-implements AdapterInterface<?>
+ *
+ * @deprecated Используйте {@link GenericAdapter}. Будет удалено в следующей версии.
  */
-abstract class SingleGenericAdapter implements AdapterInterface {
+abstract class SingleGenericAdapter extends GenericAdapter {
 
-    /**
-     * @inheritDoc
-     */
-    final function deserialize(DataMapper $mapper, mixed $data): mixed {
-        throw new LogicException();
+    final function getGenericTypeCount(): int {
+        return 1;
     }
 
-    /**
-     * @inheritDoc
-     */
-    final function serialize(DataMapper $mapper, mixed $data): mixed {
-        throw new LogicException();
+    final function deserializeWithGenerics(DataMapper $mapper, mixed $data, array $adapters): mixed {
+        return $this->deserializeWithGeneric($mapper, $data, $adapters[0]);
+    }
+
+    final function serializeWithGenerics(DataMapper $mapper, mixed $data, array $adapters): mixed {
+        return $this->serializeWithGeneric($mapper, $data, $adapters[0]);
     }
 
     /**

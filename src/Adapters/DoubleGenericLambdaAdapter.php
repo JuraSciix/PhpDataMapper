@@ -8,6 +8,8 @@ use JuraSciix\DataMapper\DataMapper;
 /**
  * @template TGeneric1
  * @template TGeneric2
+ *
+ * @deprecated Будет удалено в следующей версии
  */
 final class DoubleGenericLambdaAdapter implements AdapterInterface {
 
