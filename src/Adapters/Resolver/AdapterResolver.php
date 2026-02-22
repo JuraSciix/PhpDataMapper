@@ -4,6 +4,7 @@ namespace JuraSciix\DataMapper\Adapters\Resolver;
 
 use JuraSciix\DataMapper\AdapterInterface;
 use JuraSciix\DataMapper\Adapters\ArrayAdapter;
+use JuraSciix\DataMapper\Adapters\DeferredAdapter;
 use JuraSciix\DataMapper\Adapters\EmptyAdapter;
 use JuraSciix\DataMapper\Adapters\GenericAdapter;
 use JuraSciix\DataMapper\Adapters\GenericAdapterLambda;
@@ -32,10 +33,29 @@ abstract class AdapterResolver {
     /** @var class-string[] Типы, которые прямо сейчас строятся. Это защита от рекурсии. */
     private $processing = [];
 
+    private bool $deferred = false;
+
     function __construct(
         readonly SharedConfig $config,
         readonly Reflector $reflector
     ) {}
+
+    // Можно разрешить только конечную рекурсию.
+    //
+    // Пример бесконечной рекурсии:
+    // class C {
+    //   readonly C $c;
+    // }
+    //
+    // Пример конечной рекурсии:
+    // class C {
+    //   readonly Array<C> $cs;
+    // }
+    //
+    // Еще один пример конечной рекурсии:
+    // class C {
+    //   readonly Nullable<C> $c;
+    // }
 
     /**
      * @template TValue
@@ -43,13 +63,7 @@ abstract class AdapterResolver {
      * @return AdapterInterface<TValue>
      */
     function resolve(TypeNode $typeNode): AdapterInterface {
-        $adapter = $this->resolveWrapper(new TypeWrapper($typeNode));
-        if ($adapter instanceof GenericAdapter) {
-            // Доопределяем тип T<unresolved> до T<mixed>
-            $templates = array_fill(0, $adapter->getGenericTypeCount(), EmptyAdapter::instance());
-            return new GenericAdapterLambda($adapter, $templates);
-        }
-        return $adapter;
+        return $this->resolveWrapper(new TypeWrapper($typeNode));
     }
 
     /**
@@ -57,7 +71,7 @@ abstract class AdapterResolver {
      * @param TypeNode $node
      * @return AdapterInterface<?>
      */
-    private function resolveWithTrack($wrapper, $node) {
+    private function resolveWithRecursion($wrapper, $node) {
         // Заметка: проверка на рекурсию нужна только для адаптеров над классами,
         //  остальные типы формально не могут быть рекурсивными.
         if (in_array($wrapper->string, $this->processing, true)) {
@@ -81,6 +95,24 @@ abstract class AdapterResolver {
      * @param TypeWrapper $wrapper
      * @return AdapterInterface<?>
      */
+    private function resolveOptional($wrapper) {
+        if (in_array($wrapper->string, $this->processing, true)) {
+            // Невозможно получить адаптер для данного типа в данный момент, но это и не обязательно.
+            // Обещаем получить его позже.
+
+            // Сообщаем, что есть DeferredAdapter, из-за которого все дерево кешировать нельзя.
+            $this->deferred = true;
+
+            return new DeferredAdapter($this, $wrapper->node);
+        }
+
+        return $this->resolveWrapper($wrapper);
+    }
+
+    /**
+     * @param TypeWrapper $wrapper
+     * @return AdapterInterface<?>
+     */
     private function resolveWrapper($wrapper) {
         // Оптимизация: адаптеры для встроенных типов уже кешированы, поэтому проверяем их первыми.
         if (array_key_exists($wrapper->string, $this->config->builtinAdapters)) {
@@ -92,8 +124,19 @@ abstract class AdapterResolver {
             return $this->cache[$wrapper->string];
         }
 
-        $adapter = $this->doResolve($wrapper);
-        $this->cache[$wrapper->string] = $adapter;
+        // Не кешируем DeferredAdapter, чтобы он не возникал там, где не надо...
+        $prevDeferred = $this->deferred;
+        $this->deferred = false;
+
+        try {
+            $adapter = $this->doResolve($wrapper);
+            if (!$this->deferred) {
+                $this->cache[$wrapper->string] = $adapter;
+            }
+        } finally {
+            $this->deferred = $prevDeferred;
+        }
+
         return $adapter;
     }
 
@@ -105,29 +148,26 @@ abstract class AdapterResolver {
         $typeNode = $wrapper->node;
 
         if ($typeNode instanceof IdentifierTypeNode) {
-            // Заметка: $typeName должен быть существующим типом.
-            //  Все примитивные типы проверяются ранее.
-            $typeName = $typeNode->name;
-            $foundAdapter = $this->tryResolve($typeName);
-            if (isset($foundAdapter)) {
-                return $foundAdapter;
-            }
-            if (class_exists($typeName)) {
-                $class = ReflectionHelper::getReflectionClassSurely($typeName);
-                if ($class->isInstantiable()) {
-                    AdapterResolver::validateClass($class);
-                    return $this->resolveClass($wrapper, $class);
+            $adapter = $this->resolveIdentifier($wrapper, $typeNode);
+            if (isset($adapter)) {
+                // Считаем, что обобщенный тип применим только к IdentifierTypeNode.
+                // Обработчик GenericTypeNode не будет
+                if ($adapter instanceof GenericAdapter) {
+                    // Доопределяем тип T<unresolved...> до T<mixed...>
+                    $genericAdapters = array_fill(0, $adapter->getGenericTypeCount(), EmptyAdapter::instance());
+                    return new GenericAdapterLambda($adapter, $genericAdapters);
                 }
+                return $adapter;
             }
         }
 
         if ($typeNode instanceof NullableTypeNode) {
-            $adapter = $this->resolve($typeNode->type);
+            $adapter = $this->resolveOptional(new TypeWrapper($typeNode->type));
             return new NullableAdapter($adapter);
         }
 
         if ($typeNode instanceof ArrayTypeNode) {
-            $componentAdapter = $this->resolve($typeNode->type);
+            $componentAdapter = $this->resolveOptional(new TypeWrapper($typeNode->type));
             return new ArrayAdapter($componentAdapter);
         }
 
@@ -136,6 +176,29 @@ abstract class AdapterResolver {
         }
 
         return $this->failure($typeNode);
+    }
+
+    /**
+     * @param TypeWrapper $wrapper
+     * @param IdentifierTypeNode $typeNode
+     * @return AdapterInterface<?>
+     */
+    private function resolveIdentifier($wrapper, $typeNode) {
+        // Заметка: $typeName должен быть существующим типом.
+        //  Все примитивные типы проверяются ранее.
+        $adapter = $this->tryResolve($typeNode->name);
+        if (isset($adapter)) {
+            return $adapter;
+        }
+        if (class_exists($typeNode->name)) {
+            $class = ReflectionHelper::getReflectionClassSurely($typeNode->name);
+            if ($class->isInstantiable()) {
+                AdapterResolver::validateClass($class);
+                return $this->resolveClass($wrapper, $class);
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -180,7 +243,7 @@ abstract class AdapterResolver {
                 name: $property->getName(),
                 key: $key,
                 promoted: $property->isPromoted(),
-                adapter: $this->resolveWithTrack($wrapper, $propertyTypeNode),
+                adapter: $this->resolveWithRecursion($wrapper, $propertyTypeNode),
                 required: !$property->hasDefaultValue(),
                 setter: isset($getterMethod) ? new ReflectionMethodSetter($setterMethod) : new ReflectionPropertySetter($property),
                 getter: isset($getterMethod) ? new ReflectionMethodGetter($getterMethod) : new ReflectionPropertyGetter($property)
@@ -199,9 +262,11 @@ abstract class AdapterResolver {
      * @return AdapterInterface<?>
      */
     private function resolveGeneric($typeNode) {
-        $adapter = $this->resolveWrapper(new TypeWrapper($typeNode->type));
+        assert($typeNode->type instanceof IdentifierTypeNode);
+
+        $adapter = $this->resolveIdentifier(new TypeWrapper($typeNode->type), $typeNode->type);
         if (!($adapter instanceof GenericAdapter)) {
-            throw new ResolveException("Type '$typeNode->type' not supplying a template types");
+            throw new ResolveException("Type '$typeNode->type' not supplying a generic types");
         }
 
         // Положим, T[G1] = ...
