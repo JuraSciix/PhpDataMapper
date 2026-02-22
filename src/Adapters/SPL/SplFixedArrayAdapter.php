@@ -11,6 +11,9 @@ use JuraSciix\DataMapper\Utils\StringHelper;
 use JuraSciix\DataMapper\Utils\TypeHelper;
 use SplFixedArray;
 
+/**
+ * @template-extends SingleGenericAdapter<SplFixedArray<?>>
+ */
 final class SplFixedArrayAdapter extends SingleGenericAdapter {
 
     /**
