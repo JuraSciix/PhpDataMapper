@@ -21,11 +21,6 @@ use SplFixedArray;
  */
 class SharedConfig {
 
-    /**
-     * @var ContravariantMap<AdapterInterface<?>>
-     */
-    public readonly ContravariantMap $adapters;
-
     // Заметка: Адаптеры выполняют сериализацию и десериализацию.
     // Десериализация может быть контравариантной,
     // а сериализация ковариантной.
