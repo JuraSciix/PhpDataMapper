@@ -2,10 +2,14 @@
 
 namespace JuraSciix\DataMapper;
 
+use DateTime;
+use JuraSciix\DataMapper\Adapters\DateTime\DateTimeAdapter;
+use JuraSciix\DataMapper\Adapters\DateTime\DateTimeImmutableAdapter;
 use JuraSciix\DataMapper\Adapters\Resolver\AdapterResolver;
 use JuraSciix\DataMapper\Adapters\Resolver\DeserializerResolver;
 use JuraSciix\DataMapper\Adapters\Resolver\Reflector;
 use JuraSciix\DataMapper\Adapters\Resolver\SerializerResolver;
+use JuraSciix\DataMapper\Adapters\SPL\SplFixedArrayAdapter;
 use JuraSciix\DataMapper\Exception\DataMapperException;
 use JuraSciix\DataMapper\Exception\DeserializeException;
 use JuraSciix\DataMapper\Exception\ResolveException;
@@ -13,6 +17,7 @@ use JuraSciix\DataMapper\Exception\SerializeException;
 use PHPStan\PhpDocParser\Ast\Type\ArrayTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
+use SplFixedArray;
 
 /**
  *
@@ -25,8 +30,7 @@ final class DataMapper {
      * @return Builder Сборный объект.
      */
     static function builder() {
-        $mapper = new DataMapper();
-        return new Builder($mapper, $mapper->config);
+        return new Builder();
     }
 
     private readonly SharedConfig $config;
@@ -34,8 +38,27 @@ final class DataMapper {
     private readonly AdapterResolver $serializerResolver;
     private readonly AdapterResolver $deserializerResolver;
 
-    function __construct() {
-        $this->config = new SharedConfig();
+    /**
+     * Конструктор.
+     */
+    function __construct(?Builder $builder = null) {
+        $builder ??= new Builder();
+
+        $config = $builder->config;
+
+        $config->registerBuiltinAdapters();
+
+        // Между двумя имплементациями DateTimeInterface,
+        // приоритет получит та, которая была последней зарегистрирована.
+        $builder->registerAdapter(DateTime::class,
+            new DateTimeImmutableAdapter($config->dateTimeFormat, $config->timeZone, $config->allowTypeConverting));
+        // Последним регистрируется DateTime.
+        $builder->registerAdapter(DateTime::class,
+            new DateTimeAdapter($config->dateTimeFormat, $config->timeZone, $config->allowTypeConverting));
+        $builder->registerAdapter(SplFixedArray::class, new SplFixedArrayAdapter());
+
+        $this->config = $config;
+
         $reflector = new Reflector();
         $this->serializerResolver = new SerializerResolver($this->config, $reflector);
         $this->deserializerResolver = new DeserializerResolver($this->config, $reflector);

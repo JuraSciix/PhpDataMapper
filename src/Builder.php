@@ -10,10 +10,14 @@ final class Builder {
     /**
      * @internal
      */
-    function __construct(
-        private readonly DataMapper   $mapper,
-        private readonly SharedConfig $config,
-    ) {}
+    readonly SharedConfig $config;
+
+    /**
+     * @internal
+     */
+    function __construct() {
+        $this->config = new SharedConfig();
+    }
 
     /**
      * Регистрирует собственный адаптер для данного типа.
@@ -96,8 +100,6 @@ final class Builder {
      * @return DataMapper
      */
     function build() {
-        $this->config->registerBuiltinAdapters();
-        $this->config->registerSplAdapters($this);
-        return $this->mapper;
+        return new DataMapper($this);
     }
 }
