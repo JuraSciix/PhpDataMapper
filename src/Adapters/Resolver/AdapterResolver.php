@@ -257,7 +257,7 @@ abstract class AdapterResolver {
             } else {
                 // Тип может быть указан над свойством
                 $propertyTypeNode = $this->reflector->resolvePropertyType($property) ?: DocTypeHelper::mixedType();
-                $required = $property->hasDefaultValue();
+                $required = !$property->hasDefaultValue();
             }
 
             $getterMethod = $this->reflector->tryResolveGetterOf($property);
