@@ -116,7 +116,7 @@ class DocTypeHelper {
             $type->name = DocTypeHelper::canonizeName($type->name);
             return $type;
         }
-        if ($type instanceof IntersectionTypeNode) {
+        if ($type instanceof UnionTypeNode) {
             foreach ($type->types as &$tr) {
                 $tr = self::canonize($tr);
             }
@@ -127,6 +127,10 @@ class DocTypeHelper {
                     $nullable = true;
                     unset($type->types[$i]);
                 }
+            }
+
+            if (count($type->types) === 1) {
+                $type = $type->types[0];
             }
 
             if ($nullable) {

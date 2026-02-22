@@ -219,6 +219,8 @@ abstract class AdapterResolver {
     private function resolveClass($wrapper, $class) {
         $modelProperties = [];
 
+        $promotedPropertyTypes = $this->reflector->getConstructorParamTypes($class);
+
         foreach ($class->getProperties() as $property) {
             if ($property->isStatic()) {
                 continue;
@@ -234,7 +236,29 @@ abstract class AdapterResolver {
 
             // Вместо сложной логики, просто смотрим на тип свойства...
             // Это, скажем так, real deal.
-            $propertyTypeNode = $this->reflector->resolvePropertyType($property) ?: DocTypeHelper::mixedType();
+            if ($property->isPromoted()) {
+                // Тип может быть указан над конструктором
+                // todo: Рефакторинг. Сделать класс Reflector зависимым от $class.
+                if (isset($promotedPropertyTypes) && array_key_exists($property->getName(), $promotedPropertyTypes)) {
+                    $propertyTypeNode = $promotedPropertyTypes[$property->getName()];
+                } else if ($property->hasType()) {
+                    $propertyTypeNode = DocTypeHelper::toPhpDocTypeNode($property->getType());
+                } else {
+                    $propertyTypeNode = DocTypeHelper::mixedType();
+                }
+                $required = true;
+                foreach ($class->getConstructor()->getParameters() as $parameter) {
+                    if ($parameter->getName() === $property->getName()) {
+                        if ($parameter->isDefaultValueAvailable()) {
+                            $required = false;
+                        }
+                    }
+                }
+            } else {
+                // Тип может быть указан над свойством
+                $propertyTypeNode = $this->reflector->resolvePropertyType($property) ?: DocTypeHelper::mixedType();
+                $required = $property->hasDefaultValue();
+            }
 
             $getterMethod = $this->reflector->tryResolveGetterOf($property);
             $setterMethod = $this->reflector->tryResolveSetterOf($property);
@@ -244,7 +268,7 @@ abstract class AdapterResolver {
                 key: $key,
                 promoted: $property->isPromoted(),
                 adapter: $this->resolveWithRecursion($wrapper, $propertyTypeNode),
-                required: !$property->hasDefaultValue(),
+                required: $required,
                 setter: isset($getterMethod) ? new ReflectionMethodSetter($setterMethod) : new ReflectionPropertySetter($property),
                 getter: isset($getterMethod) ? new ReflectionMethodGetter($getterMethod) : new ReflectionPropertyGetter($property)
             );

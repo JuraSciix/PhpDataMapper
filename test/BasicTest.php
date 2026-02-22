@@ -182,4 +182,26 @@ class BasicTest extends TestCase {
         ];
         $this->mapper->deserialize($data, BarList2::class);
     }
+
+    #[Test]
+    function finiteRecursionOk(): void {
+        $perfect = new FiniteRecursion(
+            recursion: new FiniteRecursion(
+                recursionList: [
+                    new FiniteRecursion()
+                ]
+            )
+        );
+        $data = [
+            'recursion' => [
+                'recursion_list' => [
+                    [
+                        // nothing
+                    ]
+                ]
+            ]
+        ];
+        $recursion = $this->mapper->deserialize($data, FiniteRecursion::class);
+        self::assertEquals($perfect, $recursion);
+    }
 }

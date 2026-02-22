@@ -34,6 +34,28 @@ final class Reflector {
         return null;
     }
 
+    function getConstructorParamTypes(RClass $class) {
+        $constructor = $class->getConstructor();
+        if (is_null($constructor)) {
+            return null;
+        }
+        $docNode = $this->getDocNode($constructor);
+        if (is_null($docNode)) {
+            return null;
+        }
+        $paramTagValues = $docNode->getParamTagValues();
+        return array_combine(
+            keys: array_map(
+                callback: fn ($str) => substr($str, 1), // Удаляем знак $ из начала строки
+                array: array_column($paramTagValues, 'parameterName')
+            ),
+            values: array_map(
+                callback: fn ($type) => DocTypeHelper::expand(DocTypeHelper::canonize($type), $class),
+                array: array_column($paramTagValues, 'type')
+            )
+        );
+    }
+
     /**
      * @return TypeNode|null
      */
