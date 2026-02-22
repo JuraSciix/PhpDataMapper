@@ -4,32 +4,12 @@
 
 ## Внедрение
 
-Пример настройки и использования с преобразованием из строки JSON в объект:
-
+Быстрый пример:
 ```php
-class TicketController {
-    readonly DataMapper $mapper;
-    // ...
-    
-    function __construct() {
-        // Можно миновать настройку вызвав конструктор new DataMapper().
-        // Все опции снизу соответствуют значениям по умолчанию и перерчислены для наглядности.
-        $this->mapper = DataMapper::builder()
-            ->caseSensitive(false) // Отключаем чувствительность к регистру
-            ->caseStyle(CaseStyle::SNAKE_CASE) // Выбираем snake_case стиль написания для ключей
-            ->omitUnmatchedKeys(true) // Игнорируем неизвестные ключи
-            ->allowTypeConverting(true) // Разрешаем приводить типы. Напр., int ↔ string
-            ->dateTimeFormat(DateTime::ATOM) // Выбираем формат для дат
-            ->timeZone(new DateTimeZone('Europe/Moscow')) // Выбираем часовой пояс
-            ->build();
-        // ...
-    }
-    
-    function createJSON(string $json): void {
-        $ticket = $this->mapper->deserialize(json_decode($json, true), Ticket::class);
-        // ...
-    }
-}
+$mapper = new DataMapper();
+
+$ticket = $mapper->deserialize(json_decode($jsonString, true), Ticket::class);
+// ...
 
 class Ticket {
     /**
@@ -45,6 +25,20 @@ class Ticket {
 }
 ```
 
+Пример с опциями:
+```php
+// Все опции снизу соответствуют значениям по умолчанию и перерчислены для наглядности.
+$mapper = DataMapper::builder()
+    ->caseSensitive(false) // Отключаем чувствительность к регистру
+    ->caseStyle(CaseStyle::SNAKE_CASE) // Выбираем snake_case стиль написания для ключей
+    ->omitUnmatchedKeys(true) // Игнорируем неизвестные ключи
+    ->allowTypeConverting(true) // Разрешаем приводить типы. Напр., int ↔ string
+    ->dateTimeFormat(DateTime::ATOM) // Выбираем формат для дат
+    ->timeZone(new DateTimeZone('Europe/Moscow')) // Выбираем часовой пояс
+    ->build();
+// ...
+```
+
 ## Возможности и Roadmap
 
 - [x] Поддержка phpdoc для уточнения типов
@@ -53,7 +47,6 @@ class Ticket {
 - [x] Переопределение геттеров и сеттеров для свойств
 - [x] Поддержка классов **Date/Time** и **SPL**.
 - [ ] Интеграция сторонних библиотек
-- [ ] 
 
 К интеграции планируются следующие библиотеки:
 - [ ] `moneyphp/money`
