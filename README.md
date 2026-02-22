@@ -1,22 +1,105 @@
-# Objeckson
+# DataMapper
 
-## Сепарация слоев данных и логики
+Библиотека для отображения данных на объекты PHP с возможностями валидации.
 
-Мы порицаем смешивание слоев данных и логики. 
-Библиотека полностью опирается на свойства классов в рефлексии, и игнорирует всё остальное.
-Вы можете определить геттеры и сеттеры для свойств, но только при наличии этих самых свойств!
-Это просто аналог виртуальных свойств **PHP 8.4**.
+## Внедрение
 
-Библиотека не поможет модифицировать уже инстанциированные объекты. Каждый объект .
+Пример настройки и использования с преобразованием из строки JSON в объект:
 
-Это так же делает библиотеку проще.
+```php
+class TicketController {
+    readonly DataMapper $mapper;
+    // ...
+    
+    function __construct() {
+        // Можно миновать настройку вызвав конструктор new DataMapper().
+        // Все опции снизу соответствуют значениям по умолчанию и перерчислены для наглядности.
+        $this->mapper = DataMapper::builder()
+            ->caseSensitive(false) // Отключаем чувствительность к регистру
+            ->caseStyle(CaseStyle::SNAKE_CASE) // Выбираем snake_case стиль написания для ключей
+            ->omitUnmatchedKeys(true) // Игнорируем неизвестные ключи
+            ->allowTypeConverting(true) // Разрешаем приводить типы. Напр., int ↔ string
+            ->dateTimeFormat(DateTime::ATOM) // Выбираем формат для дат
+            ->timeZone(new DateTimeZone('Europe/Moscow')) // Выбираем часовой пояс
+            ->build();
+        // ...
+    }
+    
+    function createJSON(string $json): void {
+        $ticket = $this->mapper->deserialize(json_decode($json, true), Ticket::class);
+        // ...
+    }
+}
 
+class Ticket {
+    /**
+     * @param string $text Текст обращения. 
+     * @param string[] $tags Темы. 
+     * @param DateTime $created Дата создания. 
+     */
+    function __construct(
+        readonly string $text
+        readonly array $tags,
+        readonly DateTime $created,
+    ) {}
+}
+```
 
-## Проблема классов-перечислений
+## Возможности и Roadmap
 
-Значения класса-перечисления (значения-перечесления) констатированы в коде, 
-поэтому если в данных встретится новое значение, у нас не останется иного выбора, 
-кроме как выбросить исключение.
+- [x] Поддержка phpdoc для уточнения типов
+- [x] Поддержка обобщенных типов с одним параметром
+- [ ] Поддержка обобщенных типов с произвольным числом параметров
+- [x] Переопределение геттеров и сеттеров для свойств
+- [x] Поддержка классов **Date/Time** и **SPL**.
+- [ ] Интеграция сторонних библиотек
+- [ ] 
+
+К интеграции планируются следующие библиотеки:
+- [ ] `moneyphp/money`
+- [ ] `brick/math`
+- [ ] `mjaschen/phpgeo`
+- [ ] `darsyn/ip`
+- [ ] `nesbot/carbon`
+- [ ] `ramsey/uuid`
+- [ ] `psr/clock`
+- [ ] `ext-ds`
+
+## Установка
+
+Требования:
+- PHP ≥ 8.1
+- Composer
+
+Установка с помощью **Composer**:
+```
+composer require jurasciix/datamapper:^1.0
+```
+
+## Представления библиотеки
+
+> Библиотека не обрабатывает возможности PHP версии выше 8.1, таким, как
+> [Property Hooks](https://www.php.net/manual/en/language.oop5.property-hooks.php) и
+> [Lazy Objects](https://www.php.net/manual/en/language.oop5.lazy-objects.php).
+
+### Сепарация слоев данных и логики
+
+Библиотека порицает смешивание слоев данных и логики,
+поэтому стремится работать с _чистыми_ объектами, создавая их самостоятельно.
+
+> Как определить свою логику обработки данных, рассказывается в главе [Адаптеры](#адаптеры).
+
+Процесс анализа классов опирается на свойства классов. Как следствие,
+процесс наследует все [особенности рефлексии PHP](#особенности-рефлексии-php).
+
+### Классы-перечислений (enum)
+
+> В настоящий момент библиотека не поддерживает классы-перечисления,
+чтобы придерживаться идеологической и архитектурной простоты.
+
+**Проблемы классов-перечислений**. Значения класса-перечисления (значения-перечесления)
+констатированы в коде, поэтому если в данных встретится новое значение,
+у нас не останется иного выбора, кроме как выбросить исключение.
 
 Пример:
 ```php
@@ -26,105 +109,154 @@ enum State: int {
 }
 
 $mapper = new DataMapper();
-// Гарантированно выбросит исключение:
-// State have no case for value 2
+// Гарантированно привело бы к ошибке.
 $mapper->map(2, State::class);
 ```
 
-### Решение через слияние
+**Потенциальное решение через слияние**.
 
-> Под слиянием понимается взятие значения-перечисления по умолчанию в случае, 
+> Под **слиянием** понимается взятие специального значения-перечисления того же класса-перечисления в случае,
 > если встретилось неизвестное значение.
 
-**Проблема**: важно отслеживать появление неизвестных значений, 
-поэтому решение в виде слияния не подходит.
+**Проблема**: важно отслеживать появление неизвестных значений,
+поэтому решение через слияние не подходит.
 
-## Проблема обобщенных типов
 
-**PHP** ни коим образом не поддерживает обобщенные типы. 
-**PHP Doc** слишком плох, чтобы компенсировать это. Необходим статический анализатор.
+### Адаптеры
 
-## Readonly-поля
+Адаптер это объект, занимающийся сериализацией и десериализацией определенного семейства типов.
 
-Библиотека элегантно обрабатывает модификатор `readonly` у полей.
+> Про семейства типов рассказывается в главе [Связь между типами](#связь-между-типами)
+
+Если данные имеют неудобный вид, с которым не может работать библиотека,
+есть возможность определить собственный адаптер:
 
 ```php
-class Note {
-    readonly int $id;
-    
-    public string $text;
+// Добавляем собственный адаптер для типа GeoCoords
+$mapper = DataMapper::builder()
+    ->registerAdapter(GeoCoords::class, new class implements AdapterInterface {
+        function deserialize(DataMapper $mapper, mixed $data) {
+            return new GeoCoords($data[0], $data[1]);
+        }
+        function serialize(DataMapper $mapper, mixed $data) {
+            return [$data->lat, $data->lon];
+        }
+    })
+    ->build();
+
+// Приводим неудобные данные к типу GeoCoords.
+$coords = $mapper->deserialize([41.53898, -110.78358], GeoCoords::class);
+assert($coords instanceof GeoCoords);
+
+class GeoCoords {
+    function __construct(
+        readonly float $lat,
+        readonly float $lon
+    ) {}
 }
 ```
 
-## Promoted-поля
 
-Библиотека поддерживает promoted-поля.
+### Обобщенные типы
 
-Для promoted-полей библиотека подготовит значения до создания экземпляра.
-Для остальных полей - после создания.
+> Обобщенные типы не поддерживаются на уровне анализа из-за быстрорастущей комплексности этого процесса.
 
+Пример:
 ```php
-// Контакт в телефонной книге
-class Contact {
+/** 
+ * @template T
+ */
+case TList {
+    /** @var T[] */
+    public $array;
+}
 
-    // Интересный факт: модификатор public указывать необязательно, :D
+/**
+ * @template-extends TList<int>
+ */
+class IntList extends TList {}
+```
+
+Анализатору придётся учесть всю иерархию типов и мн-во разных тегов: `template`, `extends`, `implements`, включая разновидности для `psalm` и т. д.
+
+Более того, возникают нежелательно сложные вопросы с ограничениями параметров.
+
+Тем не менее библиотека умеет распознавать обобщенные типы у свойств. Пример:
+```php
+class Polygon {
+    /** @var SplFixedArray<Vertex2D> */
+    public SplFixedArray $points;
+}
+class Vertex2D {
+    public int $x, $y;
+}
+```
+
+Анализатор полностью учтёт параметр `Vertex2D` в типе и отобразит данные ожидаемым образом.
+
+> В случаях, когда параметры опущены, библиотека автоматически доопределяет их до `mixed`.
+
+### Связь между типами
+
+> Связь между типами учитывается только вручную созданными адаптерами.
+
+> Для адаптеров, которые сгенерированы автоматически библиотекой, все типы инвариантны. 
+
+Для дасериализации каждого типа `T` библиотека ищет любой подходящий (контравариантный) десериализатор.
+
+Для сериализации каждого типа `T` библиотека ищет любой подходящий (ковариантный) сериализатор.
+
+Пример:
+```php
+interface NameAware {
+    function getName(): string;
+}
+interface RatingAware {
+    function getRating(): float;
+}
+class NameAndRating implements NameAware, RatingAware {
     function __construct(
         readonly string $name,
-        readonly string $phoneNumber
-    ) {
-        // Здесь можно написать какую-то логику
-    }
+        readonly float $rating,
+    ) {}
     
-    readonly bool $favourite;
-}
-```
-
-## Getter & Setter
-
-Библиотека поддерживает геттеры и сеттеры:
-
-```php
-// Contact Plain Old PHP Object
-class ContactPopo {
-    private $name, $phoneNumber;
-    
-    /** @param string $name */
-    function setName($name) { $this->name = $name; }
-    
-    /** @return string */
-    function getName() { return $this->name; }
-        
-    /** @param string $name */
-    function setPhoneNumber($phoneNumber) { $this->phoneNumber = $phoneNumber; }
-    
-    /** @return string */
-    function getPhoneNumber() { return $this->phoneNumber; }
+    function getName(): string { return $this->name; }
+    function getRating(): float { return $this->rating; }
 }
 
-```
-
-## Собственные адаптеры
-
-```php
 $mapper = DataMapper::builder()
-    ->registerAdapter(T::class, new Factory())
-    ->build();
-// ...
+    ->registerAdapter(NameAndRating::class, new class implements AdapterInterface {
+        function deserialize(DataMapper $mapper, mixed $data) {
+            return new NameAndRating($data['name'], $data['rating']);
+        }
+        function serialize(DataMapper $mapper, mixed $data) {
+            return [
+                'name' => $data->getName(), 
+                'rating' => $data->getRating()
+            ];            
+        }
+    })
+    ->builder();
+
+// Ошибка: отсутствует ключ `rating`
+$nameAware = $map->deserialize(['name' => '...'], NameAware::class);
 ```
 
-## Собственные фабрики
 
-Вы можете определить, как создавать объект:
+### Особенности рефлексии PHP
 
+Рассмотрим следующий код:
 ```php
-$mapper = DataMapper::builder()
-    ->registerFactory(T::class, new Factory())
-    ->build();
-// ...
+case Base {
+    private $foo;
+}
+
+class Der extends Base {}
 ```
 
-## Объединения типов
+При работе с классом `Der`, поле `Base::$foo` не будет учтено анализатором и проигнорируется.
+Чтобы исправить это, поле `Base::$foo` должно иметь область видимости, как минимум, `protected`.
+Геттеры и сеттеры не оказывают влияние на поведение анализатора,
+так как это условное ограничение рефлексии PHP, которое поощряется из принципа простоты.
 
-Библиотека 1
-
-> Интересный факт: любой тип `?T` считается за _OneOf_: `null | T`
+ 
