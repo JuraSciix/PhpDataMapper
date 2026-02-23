@@ -6,7 +6,6 @@ use DateTime;
 use JuraSciix\DataMapper\Adapters\DateTime\DateTimeAdapter;
 use JuraSciix\DataMapper\Adapters\DateTime\DateTimeImmutableAdapter;
 use JuraSciix\DataMapper\Adapters\Resolver\AdapterResolver;
-use JuraSciix\DataMapper\Adapters\Resolver\Reflector;
 use JuraSciix\DataMapper\Adapters\SPL\SplFixedArrayAdapter;
 use JuraSciix\DataMapper\Exception\DataMapperException;
 use JuraSciix\DataMapper\Exception\DeserializeException;
@@ -57,10 +56,9 @@ final class DataMapper {
 
         $this->config = $config;
 
-        $reflector = new Reflector();
-        $this->serializerResolver = new AdapterResolver($this->config, $reflector,
+        $this->serializerResolver = new AdapterResolver($this->config,
             $this->config->serializers);
-        $this->deserializerResolver = new AdapterResolver($this->config, $reflector,
+        $this->deserializerResolver = new AdapterResolver($this->config,
             $this->config->deserializers);
     }
 

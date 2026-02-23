@@ -16,11 +16,10 @@ use ReflectionMethod;
 use ReflectionProperty as RProperty;
 
 final class Reflector {
-    private readonly DocParserWrapper $phpDocParser;
-
-    function __construct() {
-        $this->phpDocParser = new DocParserWrapper();
-    }
+    function __construct(
+        readonly DocParserWrapper $phpDocParser ,
+        readonly RClass           $class
+    ) {}
 
     /**
      * @param RProperty|RClass|RClassConstant|RFunctionAbstract $reflection

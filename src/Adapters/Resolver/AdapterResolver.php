@@ -14,6 +14,7 @@ use JuraSciix\DataMapper\Adapters\NullableAdapter;
 use JuraSciix\DataMapper\DataProperty;
 use JuraSciix\DataMapper\Exception\ResolveException;
 use JuraSciix\DataMapper\SharedConfig;
+use JuraSciix\DataMapper\Utils\DocParserWrapper;
 use JuraSciix\DataMapper\Utils\DocTypeHelper;
 use JuraSciix\DataMapper\Utils\ReflectionHelper;
 use PHPStan\PhpDocParser\Ast\Type\ArrayTypeNode;
@@ -35,16 +36,18 @@ class AdapterResolver {
 
     private bool $deferred = false;
 
+    private readonly DocParserWrapper $docParser;
+
     /**
      * @param SharedConfig $config
-     * @param Reflector $reflector
      * @param RegistryInterface<AdapterInterface<?>> $registry
      */
     function __construct(
         readonly SharedConfig $config,
-        readonly Reflector $reflector,
         readonly RegistryInterface $registry
-    ) {}
+    ) {
+        $this->docParser = new DocParserWrapper();
+    }
 
     // Можно разрешить только конечную рекурсию.
     //
@@ -229,7 +232,9 @@ class AdapterResolver {
     private function resolveClass($wrapper, $class) {
         $modelProperties = [];
 
-        $promotedPropertyTypes = $this->reflector->getConstructorParamTypes($class);
+        $reflector = new Reflector($this->docParser, $class);
+
+        $promotedPropertyTypes = $reflector->getConstructorParamTypes($class);
 
         foreach ($class->getProperties() as $property) {
             if ($property->isStatic()) {
@@ -266,12 +271,12 @@ class AdapterResolver {
                 }
             } else {
                 // Тип может быть указан над свойством
-                $propertyTypeNode = $this->reflector->resolvePropertyType($property) ?: DocTypeHelper::mixedType();
+                $propertyTypeNode = $reflector->resolvePropertyType($property) ?: DocTypeHelper::mixedType();
                 $required = !$property->hasDefaultValue();
             }
 
-            $getterMethod = $this->reflector->tryResolveGetterOf($property);
-            $setterMethod = $this->reflector->tryResolveSetterOf($property);
+            $getterMethod = $reflector->tryResolveGetterOf($property);
+            $setterMethod = $reflector->tryResolveSetterOf($property);
 
             $modelProperties[] = new Property(
                 name: $property->getName(),
