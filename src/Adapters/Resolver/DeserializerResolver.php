@@ -4,6 +4,7 @@ namespace JuraSciix\DataMapper\Adapters\Resolver;
 
 use JuraSciix\DataMapper\AdapterInterface;
 use JuraSciix\DataMapper\Exception\ResolveException;
+use JuraSciix\DataMapper\SharedConfig;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 
 /**
@@ -13,11 +14,8 @@ use PHPStan\PhpDocParser\Ast\Type\TypeNode;
  */
 class DeserializerResolver extends AdapterResolver {
 
-    protected function tryResolve(string $type): ?AdapterInterface {
-        if ($this->config->deserializers->contains($type)) {
-            return $this->config->deserializers->get($type);
-        }
-        return null;
+    public function __construct(SharedConfig $config, Reflector $reflector) {
+        parent::__construct($config, $reflector, $config->deserializers);
     }
 
     protected function failure(TypeNode $typeNode): AdapterInterface {

@@ -7,6 +7,9 @@ use DateTimeZone;
 use JuraSciix\DataMapper\Adapters\DeserializeAdapterWrapper;
 use JuraSciix\DataMapper\Adapters\DeserializeMatchingAdapterWrapper;
 use JuraSciix\DataMapper\Adapters\EmptyAdapter;
+use JuraSciix\DataMapper\Adapters\Resolver\ContravariantRegistry;
+use JuraSciix\DataMapper\Adapters\Resolver\CovariantRegistry;
+use JuraSciix\DataMapper\Adapters\Resolver\RegistryInterface;
 use JuraSciix\DataMapper\Utils\ContravariantMap;
 use JuraSciix\DataMapper\Utils\CovariantMap;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
@@ -23,14 +26,14 @@ class SharedConfig {
     // либо должны храниться в двух структурах, как ниже.
 
     /**
-     * @var ContravariantMap<AdapterInterface<?>>
+     * @var RegistryInterface<AdapterInterface<?>>
      */
-    public readonly ContravariantMap $deserializers;
+    public readonly RegistryInterface $deserializers;
 
     /**
-     * @var CovariantMap<AdapterInterface<?>>
+     * @var RegistryInterface<AdapterInterface<?>>
      */
-    public readonly CovariantMap $serializers;
+    public readonly RegistryInterface $serializers;
 
     /**
      * @var array<string, AdapterInterface<?>>
@@ -50,8 +53,8 @@ class SharedConfig {
     public ?DateTimeZone $timeZone = null;
 
     function __construct() {
-        $this->deserializers = new ContravariantMap();
-        $this->serializers = new CovariantMap();
+        $this->deserializers = new ContravariantRegistry();
+        $this->serializers = new CovariantRegistry();
     }
 
     function registerBuiltinAdapters(): void {

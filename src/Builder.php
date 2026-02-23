@@ -26,8 +26,8 @@ final class Builder {
      * @return self
      */
     function registerAdapter(string $type, AdapterInterface $adapter) {
-        $this->config->deserializers->put($type, $adapter);
-        $this->config->serializers->put($type, $adapter);
+        $this->config->deserializers->insert($type, $adapter);
+        $this->config->serializers->insert($type, $adapter);
         return $this;
     }
 

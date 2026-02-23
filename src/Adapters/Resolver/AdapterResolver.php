@@ -35,9 +35,15 @@ abstract class AdapterResolver {
 
     private bool $deferred = false;
 
+    /**
+     * @param SharedConfig $config
+     * @param Reflector $reflector
+     * @param RegistryInterface<AdapterInterface<?>> $registry
+     */
     function __construct(
         readonly SharedConfig $config,
-        readonly Reflector $reflector
+        readonly Reflector $reflector,
+        readonly RegistryInterface $registry
     ) {}
 
     // Можно разрешить только конечную рекурсию.
@@ -204,7 +210,9 @@ abstract class AdapterResolver {
     /**
      * @return AdapterInterface<?>|null
      */
-    protected abstract function tryResolve(string $type): ?AdapterInterface;
+    protected function tryResolve(string $type): ?AdapterInterface {
+        return $this->registry->find($type);
+    }
 
     /**
      * @return AdapterInterface<?>
