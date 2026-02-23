@@ -32,8 +32,7 @@ final class DataMapper {
 
     private readonly SharedConfig $config;
 
-    private readonly AdapterResolver $serializerResolver;
-    private readonly AdapterResolver $deserializerResolver;
+    private readonly AdapterResolver $adapterResolver;
 
     /**
      * Конструктор.
@@ -56,10 +55,7 @@ final class DataMapper {
 
         $this->config = $config;
 
-        $this->serializerResolver = new AdapterResolver($this->config,
-            $this->config->serializers);
-        $this->deserializerResolver = new AdapterResolver($this->config,
-            $this->config->deserializers);
+        $this->adapterResolver = new AdapterResolver($this->config);
     }
 
     /**
@@ -103,7 +99,7 @@ final class DataMapper {
      */
     private function doDeserialize($data, $typeNode) {
         try {
-            $adapter = $this->deserializerResolver->resolve($typeNode);
+            $adapter = $this->adapterResolver->resolve($typeNode);
             return $adapter->deserialize($this, $data);
         } catch (ResolveException $e) {
             $message = $e->getMessage();
@@ -131,7 +127,7 @@ final class DataMapper {
      */
     function serialize(mixed $data): mixed {
         $typeNode = new IdentifierTypeNode(is_object($data) ? get_class($data) : gettype($data));
-        $adapter = $this->serializerResolver->resolve($typeNode);
+        $adapter = $this->adapterResolver->resolve($typeNode);
         try {
             return $adapter->serialize($this, $data);
         } catch (ResolveException $e) {

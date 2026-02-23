@@ -40,11 +40,9 @@ class AdapterResolver {
 
     /**
      * @param SharedConfig $config
-     * @param RegistryInterface<AdapterInterface<?>> $registry
      */
     function __construct(
-        readonly SharedConfig $config,
-        readonly RegistryInterface $registry
+        readonly SharedConfig $config
     ) {
         $this->docParser = new DocParserWrapper();
     }
@@ -195,7 +193,7 @@ class AdapterResolver {
     private function resolveIdentifier($wrapper, $typeNode) {
         // Заметка: $typeName должен быть существующим типом.
         //  Все примитивные типы проверяются ранее.
-        $adapter = $this->registry->find($typeNode->name);
+        $adapter = $this->config->adapters->find($typeNode->name);
         if (isset($adapter)) {
             return $adapter;
         }
@@ -214,7 +212,7 @@ class AdapterResolver {
      * @return AdapterInterface<?>|null
      */
     protected function tryResolve(string $type): ?AdapterInterface {
-        return $this->registry->find($type);
+        return $this->config->adapters->find($type);
     }
 
     /**
