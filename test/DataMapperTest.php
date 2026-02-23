@@ -160,4 +160,64 @@ class DataMapperTest extends TestCase {
 
         $this->assertEquals($data, $serialized);
     }
+
+    static function provideFiniteRecursionData() {
+        // Добавляем пустые ключи ради строгого соответствия после сериализации
+        $data = [
+            'child' => null,
+            'children' => [
+                [
+                    'child' => [
+                        'child' => null,
+                        'children' => []
+                    ],
+                    'children' => []
+                ]
+            ]
+        ];
+
+        $object = new FiniteRecursionObject(
+            children: [
+                new FiniteRecursionObject(
+                    child: new FiniteRecursionObject()
+                )
+            ]
+        );
+
+        return [
+            [$data, $object]
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('provideFiniteRecursionData')]
+    function successDeserializeFiniteRecursion(mixed $data, FiniteRecursionObject $object): void {
+        $mapper = new DataMapper();
+
+        $deserialized = $mapper->deserialize($data, FiniteRecursionObject::class);
+
+        $this->assertEquals($object, $deserialized);
+    }
+
+    #[Test]
+    #[DataProvider('provideFiniteRecursionData')]
+    function successSerializeFiniteRecursion(mixed $data, FiniteRecursionObject $object): void {
+        $mapper = new DataMapper();
+
+        $serialized = $mapper->serialize($object);
+
+        $this->assertEquals($data, $serialized);
+    }
+
+    #[Test]
+    #[DataProvider('provideFiniteRecursionData')]
+    function failDeserializeInfiniteRecursion(): void {
+        $mapper = new DataMapper();
+
+        $class = InfiniteRecursionObject::class;
+        $this->expectExceptionObject(new DataMapperException(
+            "Unable to resolve $class: Recursion detected: $class refers to $class, which refers back to it"));
+
+        $mapper->deserialize([], InfiniteRecursionObject::class);
+    }
 }
