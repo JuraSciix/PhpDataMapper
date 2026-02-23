@@ -7,8 +7,6 @@ use DateTimeZone;
 use JuraSciix\DataMapper\Adapters\DeserializeAdapterWrapper;
 use JuraSciix\DataMapper\Adapters\DeserializeMatchingAdapterWrapper;
 use JuraSciix\DataMapper\Adapters\EmptyAdapter;
-use JuraSciix\DataMapper\Adapters\Resolver\ContravariantRegistry;
-use JuraSciix\DataMapper\Adapters\Resolver\CovariantRegistry;
 use JuraSciix\DataMapper\Adapters\Resolver\InvariantRegistry;
 use JuraSciix\DataMapper\Adapters\Resolver\RegistryInterface;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
