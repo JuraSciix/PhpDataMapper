@@ -10,8 +10,6 @@ use JuraSciix\DataMapper\Adapters\EmptyAdapter;
 use JuraSciix\DataMapper\Adapters\Resolver\ContravariantRegistry;
 use JuraSciix\DataMapper\Adapters\Resolver\CovariantRegistry;
 use JuraSciix\DataMapper\Adapters\Resolver\RegistryInterface;
-use JuraSciix\DataMapper\Utils\ContravariantMap;
-use JuraSciix\DataMapper\Utils\CovariantMap;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 
 /**
