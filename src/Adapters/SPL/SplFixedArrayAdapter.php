@@ -13,6 +13,8 @@ use SplFixedArray;
 
 /**
  * @template-extends SingleGenericAdapter<SplFixedArray<?>>
+ *
+ * @internal
  */
 final class SplFixedArrayAdapter extends SingleGenericAdapter {
 

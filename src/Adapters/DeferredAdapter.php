@@ -16,6 +16,8 @@ use Throwable;
  *
  * @template TValue
  * @template-extends AdapterInterface<TValue>
+ *
+ * @internal
  */
 final class DeferredAdapter implements AdapterInterface {
 

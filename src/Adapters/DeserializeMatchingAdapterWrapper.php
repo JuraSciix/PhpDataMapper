@@ -9,6 +9,8 @@ use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 /**
  * @template-covariant TValue
  * @template-implements AdapterInterface<TValue>
+ *
+ * @internal
  */
 final class DeserializeMatchingAdapterWrapper extends MatchingAdapter {
     private readonly Closure $matchForDeserialize;

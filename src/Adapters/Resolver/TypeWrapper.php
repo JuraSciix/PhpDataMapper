@@ -5,6 +5,9 @@ namespace JuraSciix\DataMapper\Adapters\Resolver;
 use JuraSciix\DataMapper\Utils\DocTypeHelper;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 
+/**
+ * @internal
+ */
 final class TypeWrapper {
     readonly TypeNode $sourceNode;
     readonly TypeNode $node;

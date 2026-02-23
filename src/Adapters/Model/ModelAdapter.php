@@ -13,6 +13,8 @@ use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 
 /**
  * @template T
+ *
+ * @internal
  */
 final class ModelAdapter implements AdapterInterface {
 

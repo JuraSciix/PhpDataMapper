@@ -9,6 +9,8 @@ use JuraSciix\DataMapper\DataMapper;
  * Адаптер, который пропускает значения без преобразования.
  *
  * @template-implements AdapterInterface<mixed>
+ *
+ * @internal
  */
 final class EmptyAdapter implements AdapterInterface {
 

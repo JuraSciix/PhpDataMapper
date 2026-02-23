@@ -14,6 +14,8 @@ use JuraSciix\DataMapper\Utils\StringHelper;
  * Адаптер, который приводит строку к значению типа {@link DateTimeImmutable}.
  *
  * @template-implements AdapterInterface<DateTimeImmutable>
+ *
+ * @internal
  */
 final class DateTimeImmutableAdapter implements AdapterInterface {
 

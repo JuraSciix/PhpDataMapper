@@ -5,6 +5,8 @@ namespace JuraSciix\DataMapper\Adapters\Resolver;
 /**
  * @template TValue
  * @template-implements RegistryInterface<TValue>
+ *
+ * @internal
  */
 final class InvariantRegistry implements RegistryInterface {
     /** @var array<string, TValue> */

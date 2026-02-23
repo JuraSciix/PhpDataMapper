@@ -8,6 +8,8 @@ use JuraSciix\DataMapper\DataMapper;
 /**
  * @template TValue
  * @template-implements AdapterInterface<TValue>
+ *
+ * @internal
  */
 final class GenericAdapterLambda implements AdapterInterface {
 

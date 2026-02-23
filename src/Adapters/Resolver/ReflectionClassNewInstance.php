@@ -6,6 +6,9 @@ use JuraSciix\DataMapper\Adapters\Model\FactoryInterface;
 use ReflectionClass;
 use ReflectionException;
 
+/**
+ * @internal
+ */
 final class ReflectionClassNewInstance implements FactoryInterface {
 
     function __construct(

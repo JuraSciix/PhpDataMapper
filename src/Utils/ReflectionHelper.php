@@ -10,6 +10,9 @@ use ReflectionFunctionAbstract as RFunctionAbstract;
 use ReflectionParameter as RParameter;
 use ReflectionProperty as RProperty;
 
+/**
+ * @internal
+ */
 class ReflectionHelper {
 
     /**

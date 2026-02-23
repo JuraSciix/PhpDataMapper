@@ -2,6 +2,9 @@
 
 namespace JuraSciix\DataMapper\Utils;
 
+/**
+ * @internal
+ */
 class StringHelper {
 
     /**

@@ -6,6 +6,8 @@ use JuraSciix\DataMapper\AdapterInterface;
 
 /**
  * @template TValue
+ *
+ * @internal
  */
 final class Property {
 

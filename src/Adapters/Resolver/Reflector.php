@@ -15,6 +15,9 @@ use ReflectionFunctionAbstract as RFunctionAbstract;
 use ReflectionMethod;
 use ReflectionProperty as RProperty;
 
+/**
+ * @internal
+ */
 final class Reflector {
     /** @var array<string, TypeNode> */
     private readonly array $paramTypes;

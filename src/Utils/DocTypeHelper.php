@@ -18,6 +18,9 @@ use ReflectionNamedType;
 use ReflectionType;
 use ReflectionUnionType;
 
+/**
+ * @internal
+ */
 class DocTypeHelper {
 
     /**
