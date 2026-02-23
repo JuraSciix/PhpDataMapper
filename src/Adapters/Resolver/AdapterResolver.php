@@ -234,8 +234,6 @@ class AdapterResolver {
 
         $reflector = new Reflector($this->docParser, $class);
 
-        $promotedPropertyTypes = $reflector->getConstructorParamTypes($class);
-
         foreach ($class->getProperties() as $property) {
             if ($property->isStatic()) {
                 continue;
@@ -251,29 +249,8 @@ class AdapterResolver {
 
             // Вместо сложной логики, просто смотрим на тип свойства...
             // Это, скажем так, real deal.
-            if ($property->isPromoted()) {
-                // Тип может быть указан над конструктором
-                // todo: Рефакторинг. Сделать класс Reflector зависимым от $class.
-                if (isset($promotedPropertyTypes) && array_key_exists($property->getName(), $promotedPropertyTypes)) {
-                    $propertyTypeNode = $promotedPropertyTypes[$property->getName()];
-                } else if ($property->hasType()) {
-                    $propertyTypeNode = DocTypeHelper::toPhpDocTypeNode($property->getType());
-                } else {
-                    $propertyTypeNode = DocTypeHelper::mixedType();
-                }
-                $required = true;
-                foreach ($class->getConstructor()->getParameters() as $parameter) {
-                    if ($parameter->getName() === $property->getName()) {
-                        if ($parameter->isDefaultValueAvailable()) {
-                            $required = false;
-                        }
-                    }
-                }
-            } else {
-                // Тип может быть указан над свойством
-                $propertyTypeNode = $reflector->resolvePropertyType($property) ?: DocTypeHelper::mixedType();
-                $required = !$property->hasDefaultValue();
-            }
+            $propertyTypeNode = $reflector->resolvePropertyType($property);
+            $required = !$reflector->isPropertyHasDefaultValue($property);
 
             $getterMethod = $reflector->tryResolveGetterOf($property);
             $setterMethod = $reflector->tryResolveSetterOf($property);
