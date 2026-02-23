@@ -3,6 +3,7 @@
 namespace JuraSciix\DataMapper;
 
 use DateTime;
+use DateTimeImmutable;
 use JuraSciix\DataMapper\Adapters\DateTime\DateTimeAdapter;
 use JuraSciix\DataMapper\Adapters\DateTime\DateTimeImmutableAdapter;
 use JuraSciix\DataMapper\Adapters\Resolver\AdapterResolver;
@@ -46,7 +47,7 @@ final class DataMapper {
 
         // Между двумя имплементациями DateTimeInterface,
         // приоритет получит та, которая была последней зарегистрирована.
-        $builder->registerAdapter(DateTime::class,
+        $builder->registerAdapter(DateTimeImmutable::class,
             new DateTimeImmutableAdapter($config->dateTimeFormat, $config->timeZone, $config->allowTypeConverting));
         // Последним регистрируется DateTime.
         $builder->registerAdapter(DateTime::class,
