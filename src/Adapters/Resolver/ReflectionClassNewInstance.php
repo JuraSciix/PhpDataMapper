@@ -6,7 +6,7 @@ use JuraSciix\DataMapper\Adapters\Model\FactoryInterface;
 use ReflectionClass;
 use ReflectionException;
 
-class ReflectionClassNewInstance implements FactoryInterface {
+final class ReflectionClassNewInstance implements FactoryInterface {
 
     function __construct(
         readonly ReflectionClass $class
