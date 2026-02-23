@@ -3,9 +3,12 @@
 namespace JuraSciix\DataMapper\Utils;
 
 use InvalidArgumentException;
+use JuraSciix\DataMapper\Adapters\Resolver\ContravariantRegistry;
 
 /**
  * @template V
+ *
+ * @deprecated Используйте {@link ContravariantRegistry}
  */
 final class ContravariantMap {
     /** @var array<string, V> */

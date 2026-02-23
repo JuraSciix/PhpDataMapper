@@ -3,9 +3,11 @@
 namespace JuraSciix\DataMapper\Utils;
 
 use InvalidArgumentException;
+use JuraSciix\DataMapper\Adapters\Resolver\CovariantRegistry;
 
 /**
  * @template V
+ * @deprecated Используйте {@link CovariantRegistry}
  */
 final class CovariantMap {
     /** @var array<class-string, V> */
