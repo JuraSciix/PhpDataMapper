@@ -23,7 +23,7 @@ use PHPStan\PhpDocParser\Ast\Type\NullableTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use ReflectionClass;
 
-abstract class AdapterResolver {
+class AdapterResolver {
 
     /**
      * @var array<string, AdapterInterface<?>>
@@ -192,7 +192,7 @@ abstract class AdapterResolver {
     private function resolveIdentifier($wrapper, $typeNode) {
         // Заметка: $typeName должен быть существующим типом.
         //  Все примитивные типы проверяются ранее.
-        $adapter = $this->tryResolve($typeNode->name);
+        $adapter = $this->registry->find($typeNode->name);
         if (isset($adapter)) {
             return $adapter;
         }
@@ -217,8 +217,10 @@ abstract class AdapterResolver {
     /**
      * @return AdapterInterface<?>
      */
-    protected abstract function failure(TypeNode $typeNode): AdapterInterface;
-
+    protected function failure(TypeNode $typeNode): AdapterInterface {
+        throw new ResolveException("No suitable adapter found for '$typeNode' type");
+    }
+    
     /**
      * @template TValue
      * @param ReflectionClass<TValue> $class
