@@ -3,12 +3,10 @@
 namespace JuraSciix\DataMapper;
 
 use DateTime;
+use DateTimeImmutable;
 use JuraSciix\DataMapper\Adapters\DateTime\DateTimeAdapter;
 use JuraSciix\DataMapper\Adapters\DateTime\DateTimeImmutableAdapter;
 use JuraSciix\DataMapper\Adapters\Resolver\AdapterResolver;
-use JuraSciix\DataMapper\Adapters\Resolver\DeserializerResolver;
-use JuraSciix\DataMapper\Adapters\Resolver\Reflector;
-use JuraSciix\DataMapper\Adapters\Resolver\SerializerResolver;
 use JuraSciix\DataMapper\Adapters\SPL\SplFixedArrayAdapter;
 use JuraSciix\DataMapper\Exception\DataMapperException;
 use JuraSciix\DataMapper\Exception\DeserializeException;
@@ -35,8 +33,7 @@ final class DataMapper {
 
     private readonly SharedConfig $config;
 
-    private readonly AdapterResolver $serializerResolver;
-    private readonly AdapterResolver $deserializerResolver;
+    private readonly AdapterResolver $adapterResolver;
 
     /**
      * Конструктор.
@@ -50,7 +47,7 @@ final class DataMapper {
 
         // Между двумя имплементациями DateTimeInterface,
         // приоритет получит та, которая была последней зарегистрирована.
-        $builder->registerAdapter(DateTime::class,
+        $builder->registerAdapter(DateTimeImmutable::class,
             new DateTimeImmutableAdapter($config->dateTimeFormat, $config->timeZone, $config->allowTypeConverting));
         // Последним регистрируется DateTime.
         $builder->registerAdapter(DateTime::class,
@@ -59,9 +56,7 @@ final class DataMapper {
 
         $this->config = $config;
 
-        $reflector = new Reflector();
-        $this->serializerResolver = new SerializerResolver($this->config, $reflector);
-        $this->deserializerResolver = new DeserializerResolver($this->config, $reflector);
+        $this->adapterResolver = new AdapterResolver($this->config);
     }
 
     /**
@@ -105,7 +100,7 @@ final class DataMapper {
      */
     private function doDeserialize($data, $typeNode) {
         try {
-            $adapter = $this->deserializerResolver->resolve($typeNode);
+            $adapter = $this->adapterResolver->resolve($typeNode);
             return $adapter->deserialize($this, $data);
         } catch (ResolveException $e) {
             $message = $e->getMessage();
@@ -133,7 +128,7 @@ final class DataMapper {
      */
     function serialize(mixed $data): mixed {
         $typeNode = new IdentifierTypeNode(is_object($data) ? get_class($data) : gettype($data));
-        $adapter = $this->serializerResolver->resolve($typeNode);
+        $adapter = $this->adapterResolver->resolve($typeNode);
         try {
             return $adapter->serialize($this, $data);
         } catch (ResolveException $e) {

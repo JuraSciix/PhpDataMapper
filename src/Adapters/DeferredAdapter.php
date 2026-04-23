@@ -16,6 +16,8 @@ use Throwable;
  *
  * @template TValue
  * @template-extends AdapterInterface<TValue>
+ *
+ * @internal
  */
 final class DeferredAdapter implements AdapterInterface {
 
@@ -37,7 +39,6 @@ final class DeferredAdapter implements AdapterInterface {
      * @inheritDoc
      */
     function serialize(DataMapper $mapper, mixed $data): mixed {
-        // todo
-        throw new LogicException("Cannot be proceed");
+        return $this->resolver->resolve($this->typeNode)->serialize($mapper, $data);
     }
 }

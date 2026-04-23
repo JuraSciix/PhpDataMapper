@@ -9,6 +9,8 @@ use JuraSciix\DataMapper\DataMapper;
 /**
  * @template-covariant TValue
  * @template-implements AdapterInterface<TValue>
+ *
+ * @internal
  */
 final class DeserializeAdapterWrapper implements AdapterInterface {
     private readonly Closure $adapter;

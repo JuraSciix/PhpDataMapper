@@ -14,6 +14,7 @@ use JuraSciix\DataMapper\Adapters\NullableAdapter;
 use JuraSciix\DataMapper\DataProperty;
 use JuraSciix\DataMapper\Exception\ResolveException;
 use JuraSciix\DataMapper\SharedConfig;
+use JuraSciix\DataMapper\Utils\DocParserWrapper;
 use JuraSciix\DataMapper\Utils\DocTypeHelper;
 use JuraSciix\DataMapper\Utils\ReflectionHelper;
 use PHPStan\PhpDocParser\Ast\Type\ArrayTypeNode;
@@ -23,7 +24,7 @@ use PHPStan\PhpDocParser\Ast\Type\NullableTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use ReflectionClass;
 
-abstract class AdapterResolver {
+class AdapterResolver {
 
     /**
      * @var array<string, AdapterInterface<?>>
@@ -35,10 +36,16 @@ abstract class AdapterResolver {
 
     private bool $deferred = false;
 
+    private readonly DocParserWrapper $docParser;
+
+    /**
+     * @param SharedConfig $config
+     */
     function __construct(
-        readonly SharedConfig $config,
-        readonly Reflector $reflector
-    ) {}
+        readonly SharedConfig $config
+    ) {
+        $this->docParser = new DocParserWrapper();
+    }
 
     // Можно разрешить только конечную рекурсию.
     //
@@ -186,7 +193,7 @@ abstract class AdapterResolver {
     private function resolveIdentifier($wrapper, $typeNode) {
         // Заметка: $typeName должен быть существующим типом.
         //  Все примитивные типы проверяются ранее.
-        $adapter = $this->tryResolve($typeNode->name);
+        $adapter = $this->config->adapters->find($typeNode->name);
         if (isset($adapter)) {
             return $adapter;
         }
@@ -204,13 +211,17 @@ abstract class AdapterResolver {
     /**
      * @return AdapterInterface<?>|null
      */
-    protected abstract function tryResolve(string $type): ?AdapterInterface;
+    protected function tryResolve(string $type): ?AdapterInterface {
+        return $this->config->adapters->find($type);
+    }
 
     /**
      * @return AdapterInterface<?>
      */
-    protected abstract function failure(TypeNode $typeNode): AdapterInterface;
-
+    protected function failure(TypeNode $typeNode): AdapterInterface {
+        throw new ResolveException("No suitable adapter found for '$typeNode' type");
+    }
+    
     /**
      * @template TValue
      * @param ReflectionClass<TValue> $class
@@ -219,7 +230,7 @@ abstract class AdapterResolver {
     private function resolveClass($wrapper, $class) {
         $modelProperties = [];
 
-        $promotedPropertyTypes = $this->reflector->getConstructorParamTypes($class);
+        $reflector = new Reflector($this->docParser, $class);
 
         foreach ($class->getProperties() as $property) {
             if ($property->isStatic()) {
@@ -236,32 +247,11 @@ abstract class AdapterResolver {
 
             // Вместо сложной логики, просто смотрим на тип свойства...
             // Это, скажем так, real deal.
-            if ($property->isPromoted()) {
-                // Тип может быть указан над конструктором
-                // todo: Рефакторинг. Сделать класс Reflector зависимым от $class.
-                if (isset($promotedPropertyTypes) && array_key_exists($property->getName(), $promotedPropertyTypes)) {
-                    $propertyTypeNode = $promotedPropertyTypes[$property->getName()];
-                } else if ($property->hasType()) {
-                    $propertyTypeNode = DocTypeHelper::toPhpDocTypeNode($property->getType());
-                } else {
-                    $propertyTypeNode = DocTypeHelper::mixedType();
-                }
-                $required = true;
-                foreach ($class->getConstructor()->getParameters() as $parameter) {
-                    if ($parameter->getName() === $property->getName()) {
-                        if ($parameter->isDefaultValueAvailable()) {
-                            $required = false;
-                        }
-                    }
-                }
-            } else {
-                // Тип может быть указан над свойством
-                $propertyTypeNode = $this->reflector->resolvePropertyType($property) ?: DocTypeHelper::mixedType();
-                $required = !$property->hasDefaultValue();
-            }
+            $propertyTypeNode = $reflector->resolvePropertyType($property);
+            $required = !$reflector->isPropertyHasDefaultValue($property);
 
-            $getterMethod = $this->reflector->tryResolveGetterOf($property);
-            $setterMethod = $this->reflector->tryResolveSetterOf($property);
+            $getterMethod = $reflector->tryResolveGetterOf($property);
+            $setterMethod = $reflector->tryResolveSetterOf($property);
 
             $modelProperties[] = new Property(
                 name: $property->getName(),

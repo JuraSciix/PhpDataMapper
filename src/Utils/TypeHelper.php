@@ -4,6 +4,9 @@ namespace JuraSciix\DataMapper\Utils;
 
 use InvalidArgumentException;
 
+/**
+ * @internal
+ */
 class TypeHelper {
 
     /**

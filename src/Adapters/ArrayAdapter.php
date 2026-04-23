@@ -12,6 +12,8 @@ use JuraSciix\DataMapper\Utils\TypeHelper;
 /**
  * @template TComponent
  * @template-implements AdapterInterface<TComponent[]>
+ *
+ * @internal
  */
 final class ArrayAdapter implements AdapterInterface {
 

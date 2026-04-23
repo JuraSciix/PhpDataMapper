@@ -8,6 +8,8 @@ use ReflectionProperty;
 /**
  * @template-covariant TValue
  * @template-implements GetterInterface<TValue>
+ *
+ * @internal
  */
 final class ReflectionPropertyGetter implements GetterInterface {
 

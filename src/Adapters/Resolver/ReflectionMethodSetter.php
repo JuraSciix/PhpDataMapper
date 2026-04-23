@@ -8,6 +8,8 @@ use ReflectionMethod;
 /**
  * @template TValue
  * @template-implements SetterInterface<TValue>
+ *
+ * @internal
  */
 final class ReflectionMethodSetter implements SetterInterface {
 
