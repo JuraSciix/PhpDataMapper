@@ -3,7 +3,7 @@
 namespace JuraSciix\DataMapper\Adapters\Resolver;
 
 use JuraSciix\DataMapper\CaseStyle;
-use JuraSciix\DataMapper\Exception\ResolveException;
+use JuraSciix\DataMapper\Exceptions\ResolveException;
 use JuraSciix\DataMapper\Utils\DocParserWrapper;
 use JuraSciix\DataMapper\Utils\DocTypeHelper;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode;

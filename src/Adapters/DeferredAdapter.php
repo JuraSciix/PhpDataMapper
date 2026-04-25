@@ -5,7 +5,7 @@ namespace JuraSciix\DataMapper\Adapters;
 use JuraSciix\DataMapper\AdapterInterface;
 use JuraSciix\DataMapper\Adapters\Resolver\AdapterResolver;
 use JuraSciix\DataMapper\DataMapper;
-use JuraSciix\DataMapper\Exception\DataMapperException;
+use JuraSciix\DataMapper\Exceptions\DataMapperException;
 use LogicException;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use Throwable;

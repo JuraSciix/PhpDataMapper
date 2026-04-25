@@ -1,6 +1,6 @@
 <?php
 
-namespace JuraSciix\DataMapper\Exception;
+namespace JuraSciix\DataMapper\Exceptions;
 
 use RuntimeException;
 

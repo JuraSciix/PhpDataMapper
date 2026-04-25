@@ -3,7 +3,7 @@
 namespace JuraSciix\DataMapper;
 
 use DateTimeZone;
-use JuraSciix\DataMapper\Exception\DataMapperException;
+use JuraSciix\DataMapper\Exceptions\DataMapperException;
 
 final class Builder {
 

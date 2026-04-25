@@ -6,8 +6,8 @@ use DateTimeImmutable;
 use DateTimeZone;
 use JuraSciix\DataMapper\AdapterInterface;
 use JuraSciix\DataMapper\DataMapper;
-use JuraSciix\DataMapper\Exception\DeserializeException;
-use JuraSciix\DataMapper\Exception\SerializeException;
+use JuraSciix\DataMapper\Exceptions\DeserializeException;
+use JuraSciix\DataMapper\Exceptions\SerializeException;
 use JuraSciix\DataMapper\Utils\StringHelper;
 
 /**

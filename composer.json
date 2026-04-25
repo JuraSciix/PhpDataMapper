@@ -22,7 +22,10 @@
   "autoload-dev": {
     "psr-4": {
       "JuraSciix\\UnitTest\\DataMapper\\": "test"
-    }
+    },
+    "files": [
+      "bc.php"
+    ]
   },
   "scripts": {
     "test": "phpunit test"
