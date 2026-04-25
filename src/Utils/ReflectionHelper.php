@@ -3,6 +3,7 @@
 namespace JuraSciix\DataMapper\Utils;
 
 use AssertionError;
+use Nette\Utils\Reflection;
 use ReflectionClass as RClass;
 use ReflectionClassConstant as RClassConstant;
 use ReflectionException;
@@ -49,5 +50,12 @@ class ReflectionHelper {
             return null;
         }
         return $attributes[0]->newInstance();
+    }
+
+    /**
+     * @return bool
+     */
+    static function isBuiltinType(string $typeName) {
+        return Reflection::isBuiltinType($typeName) || strcasecmp($typeName, 'mixed') === 0;
     }
 }

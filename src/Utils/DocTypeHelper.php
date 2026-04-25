@@ -74,7 +74,7 @@ class DocTypeHelper {
     static function expand(TypeNode $typeNode, ReflectionClass $holder): TypeNode {
         if ($typeNode instanceof IdentifierTypeNode) {
             $name = DocTypeHelper::canonizeName($typeNode->name);
-            if (!Reflection::isBuiltinType($name) && !class_exists($name, false)) {
+            if (!ReflectionHelper::isBuiltinType($name) && !class_exists($name, false)) {
                 $typeNode->name = Reflection::expandClassName($name, $holder);
             }
         } else if ($typeNode instanceof NullableTypeNode) {
