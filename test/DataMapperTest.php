@@ -220,4 +220,16 @@ class DataMapperTest extends TestCase {
 
         $mapper->deserialize([], InfiniteRecursionObject::class);
     }
+
+    #[Test]
+    function phpDocMixedType(): void {
+        $mapper = new DataMapper();
+
+        $data = [
+            'value' => 1
+        ];
+        $object = $mapper->deserialize($data, MixedContainer::class);
+        self::assertInstanceOf(MixedContainer::class, $object);
+        self::assertSame(1, $object->value);
+    }
 }
