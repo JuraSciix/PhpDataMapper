@@ -279,7 +279,7 @@ class AdapterResolver {
 
         $adapter = $this->resolveIdentifier(new TypeWrapper($typeNode->type), $typeNode->type);
         if (!($adapter instanceof GenericAdapter)) {
-            throw new ResolveException("Type '$typeNode->type' not supplying a generic types");
+            throw new ResolveException("Type '$typeNode->type' is not generic");
         }
 
         // Положим, T[G1] = ...
