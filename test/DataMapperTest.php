@@ -17,7 +17,7 @@ class DataMapperTest extends TestCase {
 
     static function provideCaseStyle() {
         return array_map(
-            callback: fn (CaseStyle $cs) => [$cs, $cs->format('theValue')],
+            callback: fn(CaseStyle $cs) => [$cs, $cs->format('theValue')],
             array: CaseStyle::cases()
         );
     }
@@ -231,5 +231,20 @@ class DataMapperTest extends TestCase {
         $object = $mapper->deserialize($data, MixedContainer::class);
         self::assertInstanceOf(MixedContainer::class, $object);
         self::assertSame(1, $object->value);
+    }
+
+    #[Test]
+    function testAssocArray(): void {
+        $mapper = new DataMapper();
+
+        $data = [
+            'array' => [
+                'foo' => 1,
+                'bar' => 2
+            ]
+        ];
+        $object = $mapper->deserialize($data, AssocArrayContainer::class);
+        self::assertInstanceOf(AssocArrayContainer::class, $object);
+        self::assertSame(['foo' => 1, 'bar' => 2], $object->array);
     }
 }
