@@ -7,6 +7,8 @@ use DateTimeZone;
 use JuraSciix\DataMapper\Adapters\DeserializeAdapterWrapper;
 use JuraSciix\DataMapper\Adapters\DeserializeMatchingAdapterWrapper;
 use JuraSciix\DataMapper\Adapters\EmptyAdapter;
+use JuraSciix\DataMapper\Adapters\ListArrayAdapter;
+use JuraSciix\DataMapper\Adapters\ProxyArrayAdapter;
 use JuraSciix\DataMapper\Adapters\Resolver\InvariantRegistry;
 use JuraSciix\DataMapper\Adapters\Resolver\RegistryInterface;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
@@ -56,6 +58,9 @@ class SharedConfig {
         $this->registerBuiltin('bool', 'is_bool', 'boolval');
         $this->registerBuiltin('string', 'is_string', 'strval');
         $this->registerBuiltin('null', 'is_null', fn() => null);
+
+        $this->builtinAdapters['array'] = new ProxyArrayAdapter();
+        $this->builtinAdapters['list'] = new ListArrayAdapter();
     }
 
     function registerBuiltin(string $type, callable $matcher, callable $converter) {

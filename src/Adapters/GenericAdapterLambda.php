@@ -15,24 +15,24 @@ final class GenericAdapterLambda implements AdapterInterface {
 
     /**
      * @param GenericAdapter<TValue> $adapter
-     * @param AdapterInterface<?>[] $templateAdapters
+     * @param AdapterInterface<?>[] $genericTypes
      */
     function __construct(
         readonly GenericAdapter $adapter,
-        readonly array $templateAdapters
+        readonly array $genericTypes
     ) {}
 
     /**
      * @inheritDoc
      */
     function deserialize(DataMapper $mapper, mixed $data): mixed {
-        return $this->adapter->deserializeWithGenerics($mapper, $data, $this->templateAdapters);
+        return $this->adapter->deserializeWithGenerics($mapper, $data, $this->genericTypes);
     }
 
     /**
      * @inheritDoc
      */
     function serialize(DataMapper $mapper, mixed $data): mixed {
-        return $this->adapter->serializeWithGenerics($mapper, $data, $this->templateAdapters);
+        return $this->adapter->serializeWithGenerics($mapper, $data, $this->genericTypes);
     }
 }

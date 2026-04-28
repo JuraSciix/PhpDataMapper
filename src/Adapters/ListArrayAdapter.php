@@ -10,19 +10,11 @@ use JuraSciix\DataMapper\Utils\StringHelper;
 use JuraSciix\DataMapper\Utils\TypeHelper;
 
 /**
- * @template TComponent
- * @template-implements AdapterInterface<TComponent[]>
+ * @template-implements AdapterInterface<array<?>>
  *
  * @internal
  */
-final class ArrayAdapter implements AdapterInterface {
-
-    /**
-     * @param AdapterInterface<TComponent> $componentAdapter
-     */
-    function __construct(
-        readonly AdapterInterface $componentAdapter
-    ) {}
+final class ListArrayAdapter extends SingleGenericAdapter {
 
     private function validate($data): void {
         if (!TypeHelper::isList($data)) {
@@ -30,16 +22,13 @@ final class ArrayAdapter implements AdapterInterface {
         }
     }
 
-    /**
-     * @inheritDoc
-     */
-    function deserialize(DataMapper $mapper, mixed $data): array {
+    function deserializeWithGeneric(DataMapper $mapper, mixed $data, AdapterInterface $adapter): array {
         $this->validate($data);
 
         $array = [];
         foreach ($data as $i => $value) {
             try {
-                $array[] = $this->componentAdapter->deserialize($mapper, $value);
+                $array[] = $adapter->deserialize($mapper, $value);
             } catch (DeserializeException $e) {
                 $e->unshiftStack("[$i]");
                 throw $e;
@@ -49,16 +38,13 @@ final class ArrayAdapter implements AdapterInterface {
         return $array;
     }
 
-    /**
-     * @inheritDoc
-     */
-    function serialize(DataMapper $mapper, mixed $data): array {
+    function serializeWithGeneric(DataMapper $mapper, mixed $data, AdapterInterface $adapter): array {
         $this->validate($data);
 
         $array = [];
         foreach ($data as $i => $value) {
             try {
-                $array[] = $this->componentAdapter->serialize($mapper, $value);
+                $array[] = $adapter->serialize($mapper, $value);
             } catch (SerializeException $e) {
                 $e->unshiftStack("[$i]");
                 throw $e;

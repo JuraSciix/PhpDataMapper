@@ -3,7 +3,7 @@
 namespace JuraSciix\DataMapper\Adapters\Resolver;
 
 use JuraSciix\DataMapper\AdapterInterface;
-use JuraSciix\DataMapper\Adapters\ArrayAdapter;
+use JuraSciix\DataMapper\Adapters\ListArrayAdapter;
 use JuraSciix\DataMapper\Adapters\DeferredAdapter;
 use JuraSciix\DataMapper\Adapters\EmptyAdapter;
 use JuraSciix\DataMapper\Adapters\GenericAdapter;
@@ -16,6 +16,7 @@ use JuraSciix\DataMapper\Exceptions\ResolveException;
 use JuraSciix\DataMapper\SharedConfig;
 use JuraSciix\DataMapper\Utils\DocParserWrapper;
 use JuraSciix\DataMapper\Utils\ReflectionHelper;
+use LogicException;
 use PHPStan\PhpDocParser\Ast\Type\ArrayTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\GenericTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
@@ -159,9 +160,7 @@ class AdapterResolver {
                 // Считаем, что обобщенный тип применим только к IdentifierTypeNode.
                 // Обработчик GenericTypeNode не будет
                 if ($adapter instanceof GenericAdapter) {
-                    // Доопределяем тип T<unresolved...> до T<mixed...>
-                    $genericAdapters = array_fill(0, $adapter->getGenericTypeCount(), EmptyAdapter::instance());
-                    return new GenericAdapterLambda($adapter, $genericAdapters);
+                    return $adapter->createLambda([], true);
                 }
                 return $adapter;
             }
@@ -173,8 +172,9 @@ class AdapterResolver {
         }
 
         if ($typeNode instanceof ArrayTypeNode) {
+            $listAdapter = new ListArrayAdapter();
             $componentAdapter = $this->resolveOptional(new TypeWrapper($typeNode->type));
-            return new ArrayAdapter($componentAdapter);
+            return new GenericAdapterLambda($listAdapter, [$componentAdapter]);
         }
 
         if ($typeNode instanceof GenericTypeNode) {
@@ -190,14 +190,20 @@ class AdapterResolver {
      * @return AdapterInterface<?>
      */
     private function resolveIdentifier($wrapper, $typeNode) {
-        // Заметка: $typeName должен быть существующим типом.
+        $name = $typeNode->name;
+        // Заметка (от 28 апреля, 2026): тип может быть встроенным, например, array.
+        // Алгоритм заходит сюда в случае обобщенного типа: array<...>
+        if (array_key_exists($name, $this->config->builtinAdapters)) {
+            return $this->config->builtinAdapters[$name];
+        }
+        // Заметка (от 22 февраля, 2026): $typeName должен быть существующим типом.
         //  Все примитивные типы проверяются ранее.
-        $adapter = $this->config->adapters->find($typeNode->name);
+        $adapter = $this->config->adapters->find($name);
         if (isset($adapter)) {
             return $adapter;
         }
-        if (class_exists($typeNode->name)) {
-            $class = ReflectionHelper::getReflectionClassSurely($typeNode->name);
+        if (class_exists($name)) {
+            $class = ReflectionHelper::getReflectionClassSurely($name);
             if ($class->isInstantiable()) {
                 AdapterResolver::validateClass($class);
                 return $this->resolveClass($wrapper, $class);
@@ -275,28 +281,23 @@ class AdapterResolver {
      * @return AdapterInterface<?>
      */
     private function resolveGeneric($typeNode) {
-        assert($typeNode->type instanceof IdentifierTypeNode);
+        $type = $typeNode->type;
+        assert($type instanceof IdentifierTypeNode);
 
-        $adapter = $this->resolveIdentifier(new TypeWrapper($typeNode->type), $typeNode->type);
+        $adapter = $this->resolveIdentifier(new TypeWrapper($type), $type);
         if (!($adapter instanceof GenericAdapter)) {
-            throw new ResolveException("Type '$typeNode->type' is not generic");
-        }
-
-        // Положим, T[G1] = ...
-        // Тогда T<T> или невозможен, или идентичен T<T<mixed>>, что разрешимо.
-        // Следовательно, рекурсия невозможна.
-        $expectedCount = $adapter->getGenericTypeCount();
-        $actualCount = count($typeNode->genericTypes);
-        if ($actualCount != $expectedCount) {
-            throw new ResolveException(
-                "Type '$typeNode->type' requires $expectedCount generic types, but received $actualCount");
+            throw new ResolveException("Type '$type' is not generic");
         }
 
         $genericAdapters = array_map(
             callback: $this->resolve(...),
             array: $typeNode->genericTypes
         );
-        return new GenericAdapterLambda($adapter, $genericAdapters);
+        try {
+            return $adapter->createLambda($genericAdapters, true);
+        } catch (LogicException $e) {
+            throw new ResolveException("No suitable adapter found for type '$type->name'", previous: $e);
+        }
     }
 
     private static function validateClass(ReflectionClass $class) {
