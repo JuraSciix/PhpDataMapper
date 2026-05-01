@@ -11,7 +11,7 @@ use JuraSciix\DataMapper\Adapters\GenericAdapterLambda;
 use JuraSciix\DataMapper\Adapters\Model\ModelAdapter;
 use JuraSciix\DataMapper\Adapters\Model\Property;
 use JuraSciix\DataMapper\Adapters\NullableAdapter;
-use JuraSciix\DataMapper\DataProperty;
+use JuraSciix\DataMapper\RemappedProperty;
 use JuraSciix\DataMapper\Exceptions\ResolveException;
 use JuraSciix\DataMapper\SharedConfig;
 use JuraSciix\DataMapper\Utils\DocParserWrapper;
@@ -242,8 +242,8 @@ class AdapterResolver {
                 continue;
             }
 
-            if (ReflectionHelper::hasAttribute($property, DataProperty::class)) {
-                $dataProperty = ReflectionHelper::getAttribute($property, DataProperty::class);
+            if (ReflectionHelper::hasAttribute($property, RemappedProperty::class)) {
+                $dataProperty = ReflectionHelper::getAttribute($property, RemappedProperty::class);
                 $key = $dataProperty->key;
             } else {
                 // Значение по умолчанию приводим к заданному стилю.
@@ -302,7 +302,7 @@ class AdapterResolver {
 
     private static function validateClass(ReflectionClass $class) {
         foreach ($class->getProperties() as $property) {
-            if (ReflectionHelper::hasAttribute($property, DataProperty::class)) {
+            if (ReflectionHelper::hasAttribute($property, RemappedProperty::class)) {
                 if ($property->isStatic()) {
                     throw new ResolveException();
                 }

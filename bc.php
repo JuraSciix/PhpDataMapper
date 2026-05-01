@@ -1,5 +1,6 @@
 <?php
 
+use JuraSciix\DataMapper\RemappedProperty;
 use JuraSciix\DataMapper\Exceptions\DataMapperException;
 use JuraSciix\DataMapper\Exceptions\DeserializeException;
 use JuraSciix\DataMapper\Exceptions\ResolveException;
@@ -10,3 +11,6 @@ class_alias(DataMapperException::class, 'JuraSciix\DataMapper\Exception\DataMapp
 class_alias(DeserializeException::class, 'JuraSciix\DataMapper\Exception\DeserializeException');
 class_alias(ResolveException::class, 'JuraSciix\DataMapper\Exception\ResolveException');
 class_alias(SerializeException::class, 'JuraSciix\DataMapper\Exception\SerializeException');
+
+// Для обратной совместимости на версиях ниже 1.5.5
+class_alias(RemappedProperty::class, 'JuraSciix\DataMapper\DataProperty');
